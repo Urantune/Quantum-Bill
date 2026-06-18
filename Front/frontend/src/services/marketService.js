@@ -6,7 +6,7 @@ import {
     SECTOR_PERFORMANCE,
     MARKET_STATISTICS,
     PORTFOLIO_SUMMARY,
-} from '@/data/marketData';
+} from '@/data/marketData.js';
 import { STOCK_CHART_DATA, DEFAULT_CHART_SYMBOL } from '@/data/chartData';
 import { MARKET_NEWS } from '@/data/newsData';
 

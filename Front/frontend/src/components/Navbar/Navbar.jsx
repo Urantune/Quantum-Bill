@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Search, Bell, ChevronDown, User } from 'lucide-react';
-import { MARKET_INDICES } from '@/data/marketData';
+import { MARKET_INDICES } from '@/data/marketData.js';
 import { formatPercent, getChangeColorClass } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
 
