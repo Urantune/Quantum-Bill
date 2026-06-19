@@ -1,11 +1,23 @@
-import { defineConfig } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
-// https://vite.dev/config/
+// Cấu hình Vite cho dự án StockPro Elite
+// Thiết lập alias '@' để import gọn gàng hơn từ thư mục src
 export default defineConfig({
-  plugins: [
-    react(),
-    babel({ presets: [reactCompilerPreset()] })
-  ],
-})
+    plugins: [react()],
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, './src'),
+        },
+    },
+    server: {
+        port: 5173,
+        open: true,
+    },
+    build: {
+        outDir: 'dist',
+        sourcemap: false,
+        chunkSizeWarningLimit: 1000,
+    },
+});
