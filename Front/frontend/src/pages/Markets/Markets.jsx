@@ -5,9 +5,7 @@ import TopMovers from '@/components/MarketCard/TopMovers';
 import SectorPerformance from '@/components/SectorPerformance/SectorPerformance';
 import { MOTION } from '@/constants/theme';
 
-/**
- * Trang Markets - tổng hợp chi tiết về thị trường: chỉ số, biểu đồ, top tăng/giảm, hiệu suất ngành
- */
+
 const Markets = () => {
     return (
         <motion.div {...MOTION.pageTransition}>

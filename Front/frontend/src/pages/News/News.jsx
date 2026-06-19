@@ -6,7 +6,7 @@ import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import { useFetch } from '@/hooks/useFetch';
 import { marketService } from '@/services/marketService';
-import { NEWS_CATEGORIES } from '@/data/newData';
+import { NEWS_CATEGORIES } from '@/data/newsData.js';
 import { MOTION } from '@/constants/theme';
 import { cn } from '@/utils/cn';
 import { Newspaper } from 'lucide-react';
