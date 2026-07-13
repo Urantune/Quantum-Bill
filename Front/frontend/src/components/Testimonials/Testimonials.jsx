@@ -74,7 +74,7 @@ const Testimonials = () => {
                             </div>
 
                             <p className="text-text-primary text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
-                                "{current.content}"
+                                &quot;{current.content}&quot;
                             </p>
 
                             <div className="flex items-center gap-3">

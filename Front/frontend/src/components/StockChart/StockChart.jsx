@@ -34,7 +34,7 @@ const StockChart = () => {
     );
 
     const meta = data?.meta;
-    const series = data?.series || [];
+    const series = useMemo(() => data?.series || [], [data?.series]);
 
     const maxVolume = useMemo(() => {
         if (series.length === 0) return 0;
