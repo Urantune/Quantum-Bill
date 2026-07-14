@@ -6,8 +6,9 @@ import quantum_bill.stock.owner.service.IStockService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/stocks")
@@ -28,6 +29,11 @@ public class StockController {
         return stockService.findAll(pageable);
     }
 
+    @GetMapping("/active")
+    public List<StockResponseDTO> getActiveStocks(@RequestParam(required = false) String q) {
+        return stockService.findActive(q);
+    }
+
     @GetMapping("/{id}")
 //    @PreAuthorize("hasAnyAuthority('ADMIN', 'CUSTOMER')")
     public StockResponseDTO getStockById(@PathVariable Long id) {
@@ -39,6 +45,12 @@ public class StockController {
     @ResponseStatus(HttpStatus.CREATED)
     public StockResponseDTO saveStock(@Valid @RequestBody StockRequestDTO stockRequestDTO) {
         return stockService.save(stockRequestDTO);
+    }
+
+    @PostMapping("/submit")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StockResponseDTO submitStock(@Valid @RequestBody StockRequestDTO stockRequestDTO) {
+        return stockService.submitForApproval(stockRequestDTO);
     }
 
     @PutMapping("/{id}")
