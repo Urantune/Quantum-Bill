@@ -1,4 +1,4 @@
-package quantum_bill.stock.auth.dto;
+package quantum_bill.stock.auth.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

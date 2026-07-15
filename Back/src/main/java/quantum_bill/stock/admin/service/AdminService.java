@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import quantum_bill.stock.admin.dto.AdjustWalletRequest;
 import quantum_bill.stock.admin.entity.User;
 import quantum_bill.stock.admin.repository.UserRepository;
-import quantum_bill.stock.auth.dto.UserResponse;
+import quantum_bill.stock.auth.dto.response.UserResponse;
 import quantum_bill.stock.auth.service.AuthService;
 import quantum_bill.stock.common.ApiMessage;
 import quantum_bill.stock.investor.entity.Wallet;

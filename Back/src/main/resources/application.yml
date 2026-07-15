@@ -1,0 +1,17 @@
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com # Điền email của bạn ở đây
+    password: your-app-password     # Điền mật khẩu ứng dụng (App Password) ở đây
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  signerKey: "1TjXchw5FLoESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
+  valid-duration: 3600 # thụt lề 2 khoảng trắng
+  refreshable-duration: 7200 # thụt lề 2 khoảng trắng

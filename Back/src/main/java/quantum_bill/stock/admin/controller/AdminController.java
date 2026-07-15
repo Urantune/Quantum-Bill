@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import quantum_bill.stock.admin.dto.AdjustWalletRequest;
 import quantum_bill.stock.admin.service.AdminService;
-import quantum_bill.stock.auth.dto.UserResponse;
+import quantum_bill.stock.auth.dto.response.UserResponse;
 import quantum_bill.stock.common.ApiMessage;
 import quantum_bill.stock.investor.dto.WalletResponse;
 import quantum_bill.stock.owner.dto.response.StockResponseDTO;
