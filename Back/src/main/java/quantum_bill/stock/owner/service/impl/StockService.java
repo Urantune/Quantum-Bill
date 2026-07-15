@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class StockService implements IStockService {
@@ -32,6 +33,20 @@ public class StockService implements IStockService {
     }
 
     @Override
+    public List<StockResponseDTO> findActive(String keyword) {
+        List<Stock> stocks;
+        if (keyword == null || keyword.isBlank()) {
+            stocks = stockRepository.findByStatus("ACTIVE");
+        } else {
+            stocks = stockRepository.findBySymbolContainingIgnoreCaseOrCompanyNameContainingIgnoreCase(keyword, keyword)
+                    .stream()
+                    .filter(stock -> "ACTIVE".equals(stock.getStatus()))
+                    .toList();
+        }
+        return stocks.stream().map(this::toResponseDTO).toList();
+    }
+
+    @Override
     public StockResponseDTO findById(Long id) {
         Stock stock = stockRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Stock not found with id: " + id));
@@ -48,6 +63,22 @@ public class StockService implements IStockService {
         stock.setDescription(stockRequestDTO.description());
         stock.setCurrentPrice(stockRequestDTO.currentPrice());
         stock.setStatus(stockRequestDTO.status() != null ? stockRequestDTO.status() : "ACTIVE");
+        stock.setCreatedAt(LocalDateTime.now());
+        stock.setUpdatedAt(LocalDateTime.now());
+
+        Stock savedStock = stockRepository.save(stock);
+        return toResponseDTO(savedStock);
+    }
+
+    @Override
+    public StockResponseDTO submitForApproval(StockRequestDTO stockRequestDTO) {
+        Stock stock = new Stock();
+        stock.setSymbol(stockRequestDTO.symbol().toUpperCase().trim());
+        stock.setCompanyName(stockRequestDTO.companyName());
+        stock.setIndustry(stockRequestDTO.industry());
+        stock.setDescription(stockRequestDTO.description());
+        stock.setCurrentPrice(stockRequestDTO.currentPrice());
+        stock.setStatus("PENDING");
         stock.setCreatedAt(LocalDateTime.now());
         stock.setUpdatedAt(LocalDateTime.now());
 
