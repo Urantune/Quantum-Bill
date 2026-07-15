@@ -1,4 +1,4 @@
-package quantum_bill.stock.auth.dto;
+package quantum_bill.stock.auth.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
