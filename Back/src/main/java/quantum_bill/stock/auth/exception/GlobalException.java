@@ -14,7 +14,7 @@ import java.util.Objects;
 
 @ControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler {
+public class GlobalException {
 
     private static final String MIN_ATTRIBUTE = "min";
 
