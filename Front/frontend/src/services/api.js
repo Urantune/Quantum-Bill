@@ -3,7 +3,7 @@ import axios from 'axios';
 // Cấu hình instance Axios dùng chung cho toàn bộ ứng dụng
 // Khi tích hợp API thật, chỉ cần cập nhật biến môi trường VITE_API_BASE_URL
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://api.stockpro-elite.example.com/v1',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
@@ -20,8 +20,15 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        const message = error.response?.data?.message || error.message || 'Đã xảy ra lỗi không xác định';
-        return Promise.reject(new Error(message));
+        if (error.response && error.response.data) {
+            const serverMessage = error.response.data.message;
+            if (serverMessage) {
+                return Promise.reject(serverMessage);
+            }
+        }
+
+        const fallbackMessage = error.message || 'Đã xảy ra lỗi không xác định';
+        return Promise.reject(fallbackMessage);
     }
 );
 

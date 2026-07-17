@@ -9,6 +9,7 @@ import WatchlistPage from '@/pages/WatchlistPage/WatchlistPage';
 import Analytics from '@/pages/Analytics/Analytics';
 import PricingPage from '@/pages/PricingPage/PricingPage';
 import NotFound from '@/pages/NotFound/NotFound';
+import OwnerDashboard from "@/pages/Owner/OwnerDashboard.jsx";
 
 /**
  * Cấu hình route tập trung cho toàn bộ ứng dụng.
@@ -27,6 +28,7 @@ const AppRoutes = () => {
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
+                <Route path="/owner-test" element={<OwnerDashboard />} />
             </Route>
         </Routes>
     );
