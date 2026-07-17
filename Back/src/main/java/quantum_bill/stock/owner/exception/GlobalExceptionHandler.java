@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -20,6 +21,33 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.getReasonPhrase()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String errorMessage = "Mã chứng khoán hoặc dữ liệu doanh nghiệp bị trùng lặp trên hệ thống!";
+
+        Throwable rootCause = ex.getRootCause();
+        if (rootCause instanceof java.sql.SQLException sqlEx) {
+            if (sqlEx.getErrorCode() == 1062) {
+                errorMessage = "Mã chứng khoán này đã tồn tại trên hệ thống! Vui lòng chọn mã khác.";
+            } else {
+                errorMessage = sqlEx.getMessage();
+            }
+        } else if (rootCause != null) {
+            String rootMsg = rootCause.getMessage();
+            if (rootMsg != null && (rootMsg.contains("Duplicate entry") || rootMsg.contains("1062"))) {
+                errorMessage = "Mã chứng khoán này đã tồn tại trên hệ thống! Vui lòng chọn mã khác.";
+            }
+        }
+
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                errorMessage,
+                HttpStatus.BAD_REQUEST.getReasonPhrase()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
 //    @ExceptionHandler(ExampleArtistException.class)
