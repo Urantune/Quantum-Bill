@@ -23,12 +23,10 @@ apiClient.interceptors.response.use(
         if (error.response && error.response.data) {
             const serverMessage = error.response.data.message;
             if (serverMessage) {
-                return Promise.reject(serverMessage);
+                error.message = serverMessage;
             }
         }
-
-        const fallbackMessage = error.message || 'Đã xảy ra lỗi không xác định';
-        return Promise.reject(fallbackMessage);
+        return Promise.reject(error);
     }
 );
 
