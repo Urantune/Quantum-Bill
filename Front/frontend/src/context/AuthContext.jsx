@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
             const currentToken = localStorage.getItem('token');
             if (currentToken) {
                 // Gọi API logout để invalidate token trên server
-                await apiClient.post('/auth/logout', { token: currentToken });
+                await apiClient.post('/api/auth/logout', { token: currentToken });
             }
         } catch (error) {
             console.error('Logout API call failed:', error);
@@ -160,7 +160,7 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password) => {
         try {
             setIsLoading(true);
-            const response = await apiClient.post('/auth/login', { username, password });
+            const response = await apiClient.post('/api/auth/login', { username, password });
 
             // Format trả về của Spring Boot: ApiResponse<AuthenticationResponse>
             const authResult = response.data.result;
@@ -200,8 +200,8 @@ export const AuthProvider = ({ children }) => {
     const register = async (fullName, email, username, password, role) => {
         try {
             setIsLoading(true);
-            // API: /auth/register
-            await apiClient.post('/auth/register', {
+            // API: /api/auth/register
+            await apiClient.post('/api/auth/register', {
                 fullName,
                 email,
                 username,
@@ -226,7 +226,7 @@ export const AuthProvider = ({ children }) => {
     const forgotPassword = async (email) => {
         try {
             setIsLoading(true);
-            await apiClient.post('/auth/forgot-password', { email });
+            await apiClient.post('/api/auth/forgot-password', { email });
             return { success: true };
         } catch (error) {
             console.error('Forgot password error:', error);
