@@ -1,11 +1,16 @@
 import AppRoutes from '@/routes/AppRoutes';
+import { AuthProvider } from '@/context/AuthContext';
 
 /**
  * Root component của ứng dụng StockPro Elite.
- * BrowserRouter đã được khai báo ở main.jsx, App.jsx chỉ render cấu hình route.
+ * Bọc bằng AuthProvider để toàn bộ các Route đều truy cập được trạng thái Auth.
  */
 function App() {
-    return <AppRoutes />;
+    return (
+        <AuthProvider>
+            <AppRoutes />
+        </AuthProvider>
+    );
 }
 
 export default App;

@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Check, Sparkles } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useAuth } from '@/context/AuthContext';
 
 /**
  * Card hiển thị một gói dịch vụ (Basic / Pro / Premium)
@@ -8,6 +10,16 @@ import { cn } from '@/utils/cn';
  */
 const PricingCard = ({ plan, delay = 0 }) => {
     const { name, price, period, description, features, highlighted, cta } = plan;
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSubscribe = () => {
+        if (!isAuthenticated) {
+            navigate('/auth/login');
+        } else {
+            alert(`Bạn đã đăng ký thành công gói ${name}! Hệ thống sẽ kích hoạt các quyền lợi tương ứng.`);
+        }
+    };
 
     return (
         <motion.div
@@ -38,6 +50,7 @@ const PricingCard = ({ plan, delay = 0 }) => {
             </div>
 
             <button
+                onClick={handleSubscribe}
                 className={cn(
                     'w-full py-3 rounded-pill font-semibold text-sm transition-all duration-300 active:scale-95 mb-6',
                     highlighted
