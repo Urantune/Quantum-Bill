@@ -2,10 +2,8 @@ package quantum_bill.stock.auth.controller;
 
 import com.nimbusds.jose.JOSEException;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import quantum_bill.stock.admin.entity.User;
 import quantum_bill.stock.auth.dto.request.*;
 import quantum_bill.stock.auth.dto.response.ApiResponse;
 import quantum_bill.stock.auth.dto.response.AuthenticationResponse;
@@ -14,6 +12,7 @@ import quantum_bill.stock.auth.dto.response.UserResponse;
 import quantum_bill.stock.auth.service.AuthService;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,6 +22,19 @@ public class AuthController {
 	public AuthController(AuthService authService) {
 		this.authService = authService;
 	}
+//    @GetMapping("/verify")
+//    public String verifyEmail(@RequestParam("token") String token) {
+//        EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByToken(token)
+//                .orElse(null);
+//        if (verificationToken == null || verificationToken.getExpiryTime().isBefore(LocalDateTime.now())) {
+//            return "Token không hợp lệ hoặc đã hết hạn.";
+//        }
+//        User user = verificationToken.getUser();
+//        user.setIsActive(true);
+//        userRepository.save(user);
+//        emailVerificationTokenRepository.delete(verificationToken);
+//        return "Xác thực email thành công. Bạn có thể đăng nhập.";
+//    }
 
 	@PostMapping("/register")
 	public UserResponse register(@Valid @RequestBody RegisterRequest request) {

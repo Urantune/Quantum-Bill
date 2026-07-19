@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/market")
+@CrossOrigin(origins = "http://localhost:5173")
 public class MarketController {
 	private final MarketSimulationService marketSimulationService;
 
