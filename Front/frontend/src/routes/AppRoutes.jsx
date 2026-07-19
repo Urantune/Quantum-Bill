@@ -1,7 +1,16 @@
-import { Routes, Route } from 'react-router-dom';
+import {Routes, Route} from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import PrivateRoute from '@/components/common/PrivateRoute';
+import InvestorDashboard from '@/pages/Investor/Dashboard';
+import Wallet from '@/pages/Investor/Wallet';
+import StockList from '@/pages/Investor/StockList';
+import BuyStock from '@/pages/Investor/BuyStock';
+import SellStock from '@/pages/Investor/SellStock';
+import InvestorPortfolio from '@/pages/Investor/Portfolio';
+import TransactionHistory from '@/pages/Investor/TransactionHistory';
+import Ranking from '@/pages/Investor/Ranking';
+import StockDetail from "@/pages/Investor/StockDetail";
 
 // Các trang Dashboard chính
 import Dashboard from '@/pages/Dashboard/Dashboard';
@@ -29,32 +38,61 @@ const AppRoutes = () => {
     return (
         <Routes>
             {/* Cấu hình các tuyến đường xác thực công khai */}
-            <Route element={<AuthLayout />}>
-                <Route path="/auth/login" element={<Login />} />
-                <Route path="/auth/register" element={<Register />} />
-                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+            <Route element={<AuthLayout/>}>
+                <Route path="/auth/login" element={<Login/>}/>
+                <Route path="/auth/register" element={<Register/>}/>
+                <Route path="/auth/forgot-password" element={<ForgotPassword/>}/>
             </Route>
 
             {/* Các tuyến đường sử dụng MainLayout */}
-            <Route element={<MainLayout />}>
+            <Route element={<MainLayout/>}>
                 {/* Các tuyến đường công khai */}
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/markets" element={<Markets />} />
-                <Route path="/news" element={<News />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/" element={<Dashboard/>}/>
+                <Route path="/markets" element={<Markets/>}/>
+                <Route path="/news" element={<News/>}/>
+                <Route path="/analytics" element={<Analytics/>}/>
+                <Route path="/pricing" element={<PricingPage/>}/>
 
                 {/* Các tuyến đường ứng dụng được bảo vệ */}
-                <Route element={<PrivateRoute />}>
-                    <Route path="/watchlist" element={<WatchlistPage />} />
-                    <Route path="/portfolio" element={<Portfolio />} />
-                    <Route path="/settings" element={<Settings />} />
+                <Route element={<PrivateRoute/>}>
+                    <Route path="/watchlist" element={<WatchlistPage/>}/>
+                    <Route path="/portfolio" element={<Portfolio/>}/>
+                    <Route path="/settings" element={<Settings/>}/>
                 </Route>
 
-                <Route path="*" element={<NotFound />} />
-                <Route path="/owner-test" element={<OwnerDashboard />} />
+                <Route path="*" element={<NotFound/>}/>
+                <Route path="/owner-test" element={<OwnerDashboard/>}/>
+
+                <Route path="/investor" element={<InvestorDashboard/>}/>
+
+                <Route path="/investor/wallet" element={<Wallet/>}/>
+
+                <Route path="/investor/stocks" element={<StockList/>}/>
+
+                <Route path="/investor/buy" element={<BuyStock/>}/>
+
+                <Route path="/investor/sell" element={<SellStock/>}/>
+
+                <Route path="/investor/stocks/:id" element={<StockDetail/>}/>
+
+                <Route
+                    path="/investor/portfolio"
+                    element={<InvestorPortfolio/>}
+                />
+
+                <Route
+                    path="/investor/transactions"
+                    element={<TransactionHistory/>}
+                />
+
+                <Route
+                    path="/investor/ranking"
+                    element={<Ranking/>}
+                />
             </Route>
+
         </Routes>
+
     );
 };
 
