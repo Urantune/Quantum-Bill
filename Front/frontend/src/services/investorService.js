@@ -1,18 +1,24 @@
 import axiosClient from "@/services/api.js";
+import { getCurrentUserId } from "@/services/session.js";
 
-const USER_ID = 1;
+function requireUserId(userId = getCurrentUserId()) {
+    if (!userId) {
+        throw new Error("Bạn cần đăng nhập investor trước khi dùng chức năng này.");
+    }
+    return userId;
+}
 
 const investorService = {
-    getWallet() {
-        return axiosClient.get(`/api/trading/wallet/${USER_ID}`);
+    getWallet(userId) {
+        return axiosClient.get(`/api/trading/wallet/${requireUserId(userId)}`);
     },
 
-    getPortfolio() {
-        return axiosClient.get(`/api/trading/portfolio/${USER_ID}`);
+    getPortfolio(userId) {
+        return axiosClient.get(`/api/trading/portfolio/${requireUserId(userId)}`);
     },
 
-    getTransactions() {
-        return axiosClient.get(`/api/trading/transactions/${USER_ID}`);
+    getTransactions(userId) {
+        return axiosClient.get(`/api/trading/transactions/${requireUserId(userId)}`);
     },
 
     getRanking() {
@@ -27,10 +33,8 @@ const investorService = {
         return axiosClient.post(`/api/trading/sell`, payload);
     },
 
-    getStocks(page = 0, size = 20) {
-        return axiosClient.get(
-            `/api/stocks?page=${page}&size=${size}`
-        );
+    getStocks() {
+        return axiosClient.get(`/api/stocks/active`);
     },
 
     searchStocks(keyword) {

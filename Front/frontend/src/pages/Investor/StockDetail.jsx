@@ -5,7 +5,7 @@ import investorService
     from "@/services/investorService";
 
 import StockChart
-    from "@/components/investor/StockChart";
+    from "@/components/Investor/StockChart";
 
 export default function StockDetail() {
 

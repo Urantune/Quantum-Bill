@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { getCurrentUserId } from '@/services/session.js';
 
 const StockFormModal = ({ isOpen, onClose, onSubmitSuccess, initialData = null }) => {
     const isEdit = !!initialData;
@@ -11,7 +12,7 @@ const StockFormModal = ({ isOpen, onClose, onSubmitSuccess, initialData = null }
         description: initialData?.description || '',
         currentPrice: initialData?.currentPrice || '',
         status: initialData?.status || 'PENDING',
-        createdById: 1
+        createdById: getCurrentUserId()
     });
 
     const [notification, setNotification] = useState({ type: '', message: '' });
@@ -26,7 +27,7 @@ const StockFormModal = ({ isOpen, onClose, onSubmitSuccess, initialData = null }
                 description: initialData?.description || '',
                 currentPrice: initialData?.currentPrice || '',
                 status: initialData?.status || 'PENDING',
-                createdById: 1
+                createdById: initialData?.createdById || getCurrentUserId()
             });
             setNotification({ type: '', message: '' });
         }

@@ -29,7 +29,7 @@ Content-Type: application/json
 - User role hop le: `ADMIN`, `OWNER`, `INVESTOR`.
 - Owner dang ky xong co `status=PENDING`, admin phai approve thi moi co role `OWNER`.
 - Investor dang ky xong co `status=ACTIVE`, role `INVESTOR`, backend tao wallet mac dinh `100000000 VND`.
-- Giao dich mua/ban chi cho phep tu `13:00` den `18:00` theo gio server.
+- Giao dich mua/ban chi cho phep tu `10:00` den `18:00` theo gio server.
 - Phi san la `3.6%` tren gia tri giao dich.
 - Gia co phieu tang/giam random qua API market. Gia va thong tin chinh nam MySQL; lich su tang/giam nam MongoDB.
 - Bien do ngay duoc backend gioi han toi da `+9%` va `-9%`.
@@ -42,7 +42,7 @@ Khi loi, backend thuong tra:
 {
   "timestamp": "2026-07-14T10:20:45.991517452",
   "status": 400,
-  "message": "Trading is only allowed from 13:00 to 18:00",
+  "message": "Trading is only allowed from 10:00 to 18:00",
   "error": "Bad Request"
 }
 ```
@@ -408,9 +408,28 @@ Response rong neu thanh cong.
 
 ## Market APIs
 
-### Simulate Market
+### Auto Market Updates
 
-Dung cho admin/dev hoac scheduler tren frontend de bam nut random gia.
+Backend tu dong random gia moi `15s` trong gio giao dich `10:00-18:00`.
+
+Frontend khong can goi API simulate lien tuc. De hien gia realtime, frontend nen poll:
+
+```txt
+GET /api/stocks/active
+GET /api/market/stocks/{stockId}/history
+```
+
+Tan suat poll goi y:
+
+```txt
+Market board: moi 15s
+Stock detail/chart: moi 15s
+Portfolio: moi 15-30s
+```
+
+### Simulate Market Manually
+
+Dung cho admin/dev bam nut random gia thu cong.
 
 ```http
 POST /api/market/simulate
@@ -419,7 +438,7 @@ POST /api/market/simulate?force=true
 
 Rule:
 
-- `force=false` hoac khong truyen: chi chay trong gio 13:00-18:00.
+- `force=false` hoac khong truyen: chi chay trong gio 10:00-18:00.
 - `force=true`: bo qua rule gio, tien cho nut admin test.
 - Backend random gia, cap nhat MySQL, va luu lich su vao MongoDB.
 
@@ -533,7 +552,7 @@ Neu ngoai gio giao dich, backend tra 400:
 ```json
 {
   "status": 400,
-  "message": "Trading is only allowed from 13:00 to 18:00",
+  "message": "Trading is only allowed from 10:00 to 18:00",
   "error": "Bad Request"
 }
 ```
@@ -866,4 +885,3 @@ http://localhost:5173
 ```
 
 Hien tai neu fetch bi loi CORS tren browser nhung Postman/curl OK, do la loi browser policy, khong phai API.
-

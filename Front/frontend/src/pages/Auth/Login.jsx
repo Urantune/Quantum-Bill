@@ -91,12 +91,6 @@ const Login = () => {
                         <label className="text-xs font-semibold text-text-secondary" htmlFor="password">
                             Mật khẩu
                         </label>
-                        <Link
-                            to="/auth/forgot-password"
-                            className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-                        >
-                            Quên mật khẩu?
-                        </Link>
                     </div>
                     <div className="relative">
                         <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-text-muted" />

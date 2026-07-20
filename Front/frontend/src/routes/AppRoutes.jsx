@@ -1,7 +1,8 @@
-import {Routes, Route} from 'react-router-dom';
+import {Routes, Route, Navigate} from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import PrivateRoute from '@/components/common/PrivateRoute';
+import { useAuth } from '@/context/AuthContext';
 import InvestorDashboard from '@/pages/Investor/Dashboard';
 import Wallet from '@/pages/Investor/Wallet';
 import StockList from '@/pages/Investor/StockList';
@@ -46,54 +47,72 @@ const AppRoutes = () => {
 
             {/* Các tuyến đường sử dụng MainLayout */}
             <Route element={<MainLayout/>}>
-                {/* Các tuyến đường công khai */}
-                <Route path="/" element={<Dashboard/>}/>
-                <Route path="/markets" element={<Markets/>}/>
-                <Route path="/news" element={<News/>}/>
-                <Route path="/analytics" element={<Analytics/>}/>
-                <Route path="/pricing" element={<PricingPage/>}/>
+                <Route path="/" element={<RoleHome/>}/>
 
                 {/* Các tuyến đường ứng dụng được bảo vệ */}
                 <Route element={<PrivateRoute/>}>
-                    <Route path="/watchlist" element={<WatchlistPage/>}/>
-                    <Route path="/portfolio" element={<Portfolio/>}/>
-                    <Route path="/settings" element={<Settings/>}/>
+                    <Route path="/owner" element={<OwnerDashboard/>}/>
+
+                    <Route path="/investor" element={<InvestorDashboard/>}/>
+
+                    <Route path="/investor/wallet" element={<Wallet/>}/>
+
+                    <Route path="/investor/stocks" element={<StockList/>}/>
+
+                    <Route path="/investor/buy" element={<BuyStock/>}/>
+
+                    <Route path="/investor/sell" element={<SellStock/>}/>
+
+                    <Route path="/investor/stocks/:id" element={<StockDetail/>}/>
+
+                    <Route
+                        path="/investor/portfolio"
+                        element={<InvestorPortfolio/>}
+                    />
+
+                    <Route
+                        path="/investor/transactions"
+                        element={<TransactionHistory/>}
+                    />
+
+                    <Route
+                        path="/investor/ranking"
+                        element={<Ranking/>}
+                    />
                 </Route>
 
                 <Route path="*" element={<NotFound/>}/>
-                <Route path="/owner-test" element={<OwnerDashboard/>}/>
-
-                <Route path="/investor" element={<InvestorDashboard/>}/>
-
-                <Route path="/investor/wallet" element={<Wallet/>}/>
-
-                <Route path="/investor/stocks" element={<StockList/>}/>
-
-                <Route path="/investor/buy" element={<BuyStock/>}/>
-
-                <Route path="/investor/sell" element={<SellStock/>}/>
-
-                <Route path="/investor/stocks/:id" element={<StockDetail/>}/>
-
-                <Route
-                    path="/investor/portfolio"
-                    element={<InvestorPortfolio/>}
-                />
-
-                <Route
-                    path="/investor/transactions"
-                    element={<TransactionHistory/>}
-                />
-
-                <Route
-                    path="/investor/ranking"
-                    element={<Ranking/>}
-                />
             </Route>
 
         </Routes>
 
     );
+};
+
+const RoleHome = () => {
+    const { user, isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading) {
+        return <div className="p-6 text-text-secondary">Đang tải phiên đăng nhập...</div>;
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/auth/login" replace />;
+    }
+
+    if (user?.status === 'PENDING') {
+        return <Navigate to="/owner" replace />;
+    }
+
+    if (user?.roles?.includes('OWNER')) {
+        return <Navigate to="/owner" replace />;
+    }
+
+    if (user?.roles?.includes('INVESTOR')) {
+        return <Navigate to="/investor" replace />;
+    }
+
+    return <Navigate to="/investor/ranking" replace />;
 };
 
 export default AppRoutes;

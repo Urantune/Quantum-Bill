@@ -12,7 +12,7 @@ export default function StockList() {
         investorService
             .getStocks()
             .then(res =>
-                setStocks(res.data.content)
+                setStocks(Array.isArray(res.data) ? res.data : [])
             );
 
     }, []);
@@ -26,7 +26,7 @@ export default function StockList() {
             const res =
                 await investorService.getStocks();
 
-            setStocks(res.data.content);
+            setStocks(Array.isArray(res.data) ? res.data : []);
             return;
         }
 

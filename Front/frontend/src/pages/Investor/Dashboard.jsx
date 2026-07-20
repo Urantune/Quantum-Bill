@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import investorService from "@/services/investorService";
-import TransactionTable from "@/components/investor/TransactionTable";
+import TransactionTable from "@/components/Investor/TransactionTable";
 import {
     ResponsiveContainer,
     PieChart,

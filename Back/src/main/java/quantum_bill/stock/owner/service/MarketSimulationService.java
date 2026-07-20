@@ -19,7 +19,7 @@ import java.util.SplittableRandom;
 @Service
 public class MarketSimulationService {
 	private static final BigDecimal DAILY_LIMIT = new BigDecimal("0.09");
-	private static final LocalTime MARKET_OPEN = LocalTime.of(13, 0);
+	private static final LocalTime MARKET_OPEN = LocalTime.of(10, 0);
 	private static final LocalTime MARKET_CLOSE = LocalTime.of(18, 0);
 
 	private final StockRepository stockRepository;
@@ -43,6 +43,11 @@ public class MarketSimulationService {
 
 	public List<StockPriceHistory> history(Long stockId) {
 		return historyRepository.findByStockIdOrderByRecordedAtDesc(stockId);
+	}
+
+	public boolean isMarketOpen() {
+		LocalTime now = LocalTime.now();
+		return !now.isBefore(MARKET_OPEN) && !now.isAfter(MARKET_CLOSE);
 	}
 
 	private MarketSimulationResponse simulateStock(Stock stock) {
@@ -117,9 +122,8 @@ public class MarketSimulationService {
 	}
 
 	private void assertTradingHours() {
-		LocalTime now = LocalTime.now();
-		if (now.isBefore(MARKET_OPEN) || now.isAfter(MARKET_CLOSE)) {
-			throw new IllegalStateException("Market simulation is only allowed from 13:00 to 18:00");
+		if (!isMarketOpen()) {
+			throw new IllegalStateException("Market simulation is only allowed from 10:00 to 18:00");
 		}
 	}
 }

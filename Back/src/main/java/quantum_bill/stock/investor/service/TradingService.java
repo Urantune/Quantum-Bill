@@ -28,7 +28,7 @@ import java.util.List;
 public class TradingService {
 	private static final BigDecimal FEE_RATE = new BigDecimal("0.036");
 	private static final BigDecimal INITIAL_BALANCE = new BigDecimal("100000000");
-	private static final LocalTime MARKET_OPEN = LocalTime.of(13, 0);
+	private static final LocalTime MARKET_OPEN = LocalTime.of(10, 0);
 	private static final LocalTime MARKET_CLOSE = LocalTime.of(18, 0);
 
 	private final UserRepository userRepository;
@@ -161,7 +161,7 @@ public class TradingService {
 	private void assertTradingHours() {
 		LocalTime now = LocalTime.now();
 		if (now.isBefore(MARKET_OPEN) || now.isAfter(MARKET_CLOSE)) {
-			throw new IllegalStateException("Trading is only allowed from 13:00 to 18:00");
+			throw new IllegalStateException("Trading is only allowed from 10:00 to 18:00");
 		}
 	}
 

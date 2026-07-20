@@ -1,11 +1,17 @@
 import apiClient from './api';
+import { getCurrentUserId } from '@/services/session.js';
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.content)) return data.content;
+    return [];
+}
 
 export const ownerService = {
 
-    getMyStocks: (page = 0, size = 20) => {
-        return apiClient.get('/api/stocks', {
-            params: { page, size }
-        }).then(response => response.data);
+    getMyStocks: () => {
+        return apiClient.get('/api/stocks')
+            .then(response => normalizeList(response.data));
     },
 
     getStockHistory: (stockId) => {
@@ -14,7 +20,10 @@ export const ownerService = {
     },
 
     submitStock: (stockData) => {
-        return apiClient.post('/api/stocks/submit', stockData)
+        return apiClient.post('/api/stocks/submit', {
+            ...stockData,
+            createdById: stockData.createdById || getCurrentUserId(),
+        })
             .then(
                 response => response.data,
                 error => {

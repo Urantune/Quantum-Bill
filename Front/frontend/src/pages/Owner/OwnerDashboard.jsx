@@ -24,8 +24,7 @@ const OwnerDashboard = () => {
     const fetchOwnerData = async (page = 0) => {
         setLoading(true);
         try {
-            const data = await ownerService.getMyStocks(0, 100);
-            const allItems = data.content || [];
+            const allItems = await ownerService.getMyStocks();
 
             const filtered = allItems.filter(stock => {
                 const matchesSearch = stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||

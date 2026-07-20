@@ -2,22 +2,15 @@
 // Tên icon tương ứng với bộ Lucide React (import động trong component Sidebar)
 
 export const NAV_ITEMS = [
-    {id: 'dashboard', label: 'Tổng quan', path: '/', icon: 'LayoutDashboard'},
-    {id: 'markets', label: 'Thị trường', path: '/markets', icon: 'TrendingUp'},
-    {id: 'watchlist', label: 'Theo dõi', path: '/watchlist', icon: 'Star'},
-    {id: 'portfolio', label: 'Danh mục', path: '/portfolio', icon: 'Wallet'},
-    {id: 'news', label: 'Tin tức', path: '/news', icon: 'Newspaper'},
-    {id: 'analytics', label: 'Phân tích', path: '/analytics', icon: 'BarChart3'},
-    {id: 'pricing', label: 'Gói dịch vụ', path: '/pricing', icon: 'CreditCard'},
-    {id: 'settings', label: 'Cài đặt', path: '/settings', icon: 'Settings'},
-    {id: 'investor-dashboard', label: 'Investor Dashboard', path: '/investor', icon: 'Wallet'},
-    {id: 'investor-wallet', label: 'Wallet', path: '/investor/wallet', icon: 'Wallet'},
-    {id: 'investor-stocks', label: 'Stock List', path: '/investor/stocks', icon: 'TrendingUp'},
-    {id: 'investor-buy', label: 'Buy Stock', path: '/investor/buy', icon: 'CreditCard'},
-    {id: 'investor-sell', label: 'Sell Stock', path: '/investor/sell', icon: 'CreditCard'},
-    {id: 'investor-portfolio', label: 'Portfolio', path: '/investor/portfolio', icon: 'BarChart3'},
-    {id: 'investor-transactions', label: 'Transactions', path: '/investor/transactions', icon: 'LayoutDashboard'},
-    {id: 'investor-ranking', label: 'Ranking', path: '/investor/ranking', icon: 'Star'}
+    {id: 'investor-dashboard', label: 'Tổng quan investor', path: '/investor', icon: 'LayoutDashboard', roles: ['INVESTOR']},
+    {id: 'investor-wallet', label: 'Ví tiền', path: '/investor/wallet', icon: 'Wallet', roles: ['INVESTOR']},
+    {id: 'investor-stocks', label: 'Bảng giá cổ phiếu', path: '/investor/stocks', icon: 'TrendingUp', roles: ['INVESTOR']},
+    {id: 'investor-buy', label: 'Mua cổ phiếu', path: '/investor/buy', icon: 'CreditCard', roles: ['INVESTOR']},
+    {id: 'investor-sell', label: 'Bán cổ phiếu', path: '/investor/sell', icon: 'CreditCard', roles: ['INVESTOR']},
+    {id: 'investor-portfolio', label: 'Danh mục', path: '/investor/portfolio', icon: 'BarChart3', roles: ['INVESTOR']},
+    {id: 'investor-transactions', label: 'Lịch sử giao dịch', path: '/investor/transactions', icon: 'LayoutDashboard', roles: ['INVESTOR']},
+    {id: 'investor-ranking', label: 'Xếp hạng', path: '/investor/ranking', icon: 'Star', roles: ['INVESTOR', 'ADMIN']},
+    {id: 'owner-dashboard', label: 'Doanh nghiệp', path: '/owner', icon: 'Building', roles: ['OWNER'], statuses: ['PENDING']}
 ];
 
 export const FOOTER_LINKS = {
@@ -64,4 +57,3 @@ export const SOCIAL_LINKS = [
     {id: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com', icon: 'Linkedin'},
     {id: 'twitter', label: 'X (Twitter)', url: 'https://twitter.com', icon: 'Twitter'},
 ];
-

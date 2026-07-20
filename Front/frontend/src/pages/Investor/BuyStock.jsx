@@ -1,118 +1,114 @@
-import {useState} from "react";
+import { useEffect, useMemo, useState } from "react";
 import investorService from "@/services/investorService";
+import { getCurrentUserId } from "@/services/session.js";
+
+const FEE_RATE = 0.036;
 
 export default function BuyStock() {
-
-    const [symbol, setSymbol] = useState("");
-    const [wallet, setWallet] = useState(null);
+    const [stocks, setStocks] = useState([]);
+    const [stockId, setStockId] = useState("");
     const [quantity, setQuantity] = useState("");
-    const [stock, setStock] = useState(null);
+    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleBuy = async () => {
+    useEffect(() => {
+        investorService.getStocks()
+            .then(res => setStocks(Array.isArray(res.data) ? res.data : []))
+            .catch(err => setError(err.message || "Không tải được danh sách cổ phiếu"));
+    }, []);
 
+    const selectedStock = useMemo(
+        () => stocks.find(stock => String(stock.id) === String(stockId)),
+        [stockId, stocks]
+    );
+
+    const grossAmount = selectedStock && quantity
+        ? Number(selectedStock.currentPrice) * Number(quantity)
+        : 0;
+    const fee = grossAmount * FEE_RATE;
+    const netAmount = grossAmount + fee;
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         setError("");
+        setMessage("");
+
+        if (!selectedStock) {
+            setError("Vui lòng chọn cổ phiếu.");
+            return;
+        }
 
         if (!quantity || Number(quantity) <= 0) {
-
-            setError(
-                "Quantity must be greater than 0"
-            );
-
-            return;
-        }
-
-        const estimatedCost =
-            Number(quantity)
-            *
-            Number(stock.currentPrice);
-
-        const fee =
-            estimatedCost * 0.001;
-
-        const totalCost =
-            estimatedCost + fee;
-
-        if (
-            totalCost >
-            wallet.availableBalance
-        ) {
-
-            setError(
-                "Insufficient balance"
-            );
-
-            return;
-        }
-
-        const confirmed =
-            window.confirm(
-                `Buy ${quantity} ${symbol}?
-            
-Total:
-${totalCost.toLocaleString()} VNĐ`
-            );
-
-        if (!confirmed) {
+            setError("Số lượng phải lớn hơn 0.");
             return;
         }
 
         try {
-
-            await investorService.buyStock({
-
-                userId: 1,
-
-                symbol,
-
-                quantity:
-                    Number(quantity)
-
+            setLoading(true);
+            const response = await investorService.buyStock({
+                userId: getCurrentUserId(),
+                stockId: selectedStock.id,
+                quantity: Number(quantity),
             });
-
-            alert("Buy success");
-
+            setMessage(`Mua thành công ${response.data.quantity} ${response.data.symbol}. Số dư còn ${Number(response.data.walletBalance).toLocaleString()} VND.`);
+            setQuantity("");
         } catch (err) {
-
-            setError(
-
-                err?.response?.data?.message ||
-
-                "Buy failed"
-
-            );
-
+            setError(err.response?.data?.message || err.message || "Mua cổ phiếu thất bại.");
+        } finally {
+            setLoading(false);
         }
-
     };
 
     return (
-        <form
-            onSubmit={handleBuy}
-            className="p-6 space-y-4"
-        >
-            <h2>Buy Stock</h2>
+        <div className="p-6">
+            <div className="max-w-xl mx-auto bg-bg-base border border-border-subtle rounded-xl p-6">
+                <h2 className="text-2xl font-bold mb-6">Mua cổ phiếu</h2>
 
-            <input
-                className="border p-2 w-full"
-                placeholder="Symbol"
-                value={symbol}
-                onChange={e => setSymbol(e.target.value)}
-            />
+                {error && <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 border border-red-300">{error}</div>}
+                {message && <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-700 border border-green-300">{message}</div>}
 
-            <input
-                className="border p-2 w-full"
-                type="number"
-                placeholder="Quantity"
-                value={quantity}
-                onChange={e => setQuantity(e.target.value)}
-            />
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block mb-2">Cổ phiếu</label>
+                        <select
+                            value={stockId}
+                            onChange={event => setStockId(event.target.value)}
+                            className="w-full border border-border-subtle rounded-lg px-4 py-2"
+                            required
+                        >
+                            <option value="">Chọn mã cổ phiếu</option>
+                            {stocks.map(stock => (
+                                <option key={stock.id} value={stock.id}>
+                                    {stock.symbol} - {stock.companyName} - {Number(stock.currentPrice).toLocaleString()} VND
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-            <button
-                className="px-4 py-2 rounded bg-primary"
-            >
-                Buy
-            </button>
-        </form>
+                    <div>
+                        <label className="block mb-2">Số lượng</label>
+                        <input
+                            type="number"
+                            min="1"
+                            value={quantity}
+                            onChange={event => setQuantity(event.target.value)}
+                            className="w-full border border-border-subtle rounded-lg px-4 py-2"
+                            required
+                        />
+                    </div>
+
+                    <div className="rounded-lg border border-border-subtle p-4 text-sm space-y-2">
+                        <div className="flex justify-between"><span>Giá trị mua</span><b>{grossAmount.toLocaleString()} VND</b></div>
+                        <div className="flex justify-between"><span>Phí sàn 3.6%</span><b>{fee.toLocaleString()} VND</b></div>
+                        <div className="flex justify-between"><span>Tổng thanh toán</span><b>{netAmount.toLocaleString()} VND</b></div>
+                    </div>
+
+                    <button type="submit" disabled={loading} className="px-6 py-2 rounded-lg bg-primary text-white">
+                        {loading ? "Đang xử lý..." : "Mua"}
+                    </button>
+                </form>
+            </div>
+        </div>
     );
 }
