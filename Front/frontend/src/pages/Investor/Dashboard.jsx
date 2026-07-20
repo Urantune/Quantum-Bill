@@ -13,12 +13,13 @@ export default function Dashboard() {
 
     const [portfolio, setPortfolio] = useState(null);
     const [transactions, setTransactions] = useState([]);
+    const [error, setError] = useState("");
 
     useEffect(() => {
 
         investorService.getPortfolio()
             .then(res => setPortfolio(res.data))
-            .catch(console.error);
+            .catch(err => setError(err.response?.data?.message || err.message || "Không tải được dashboard investor."));
 
         investorService.getTransactions()
             .then(res => setTransactions(res.data))
@@ -26,16 +27,17 @@ export default function Dashboard() {
 
     }, []);
 
-    if (!portfolio) return <div>Loading...</div>;
+    if (error) return <div className="p-6 text-red-500">{error}</div>;
+    if (!portfolio) return <div className="p-6 text-text-secondary">Loading...</div>;
 
     const data = [
         {
             name: "Cash",
-            value: portfolio.cashBalance
+            value: Number(portfolio.cashBalance || 0)
         },
         {
             name: "Holding",
-            value: portfolio.holdingsValue
+            value: Number(portfolio.holdingsValue || 0)
         }
     ];
 

@@ -13,24 +13,29 @@ export default function StockDetail() {
 
     const [stock, setStock] = useState(null);
     const [history, setHistory] = useState([]);
+    const [error, setError] = useState("");
 
     useEffect(() => {
+        setError("");
 
         investorService
             .getStockById(id)
             .then(res =>
                 setStock(res.data)
-            );
+            )
+            .catch(err => setError(err.response?.data?.message || err.message || "Không tải được cổ phiếu."));
 
         investorService
             .getStockHistory(id)
             .then(res =>
-                setHistory(res.data)
-            );
+                setHistory(Array.isArray(res.data) ? res.data : [])
+            )
+            .catch(() => setHistory([]));
 
     }, [id]);
 
-    if (!stock) return <div>Loading...</div>;
+    if (error) return <div className="p-6 text-red-500">{error}</div>;
+    if (!stock) return <div className="p-6 text-text-secondary">Loading...</div>;
 
     return (
         <div className="p-6">
@@ -127,7 +132,13 @@ export default function StockDetail() {
 
                         <tbody>
 
-                        {history.map(item => (
+                        {history.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className="p-6 text-center text-text-secondary">
+                                    Chưa có lịch sử tăng/giảm.
+                                </td>
+                            </tr>
+                        ) : history.map(item => (
 
                             <tr
                                 key={item.id}

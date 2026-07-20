@@ -7,13 +7,14 @@ export default function TransactionHistory() {
     const [transactions, setTransactions] = useState([]);
     const [filter, setFilter] = useState("ALL");
     const [keyword, setKeyword] = useState("");
+    const [error, setError] = useState("");
 
 
     useEffect(() => {
 
         investorService.getTransactions()
             .then((res) => setTransactions(res.data))
-            .catch(console.error);
+            .catch((err) => setError(err.response?.data?.message || err.message || "Không tải được lịch sử giao dịch."));
 
     }, []);
 
@@ -59,6 +60,7 @@ export default function TransactionHistory() {
 
     return (
         <div className="p-6">
+            {error && <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 border border-red-300">{error}</div>}
 
             <div className="flex justify-between items-center mb-6">
 
@@ -137,7 +139,13 @@ export default function TransactionHistory() {
 
                     <tbody>
 
-                    {paginatedData.map(item => (
+                    {paginatedData.length === 0 ? (
+                        <tr>
+                            <td colSpan="7" className="p-6 text-center text-text-secondary">
+                                Chưa có giao dịch nào.
+                            </td>
+                        </tr>
+                    ) : paginatedData.map(item => (
 
                         <tr
                             key={item.id}

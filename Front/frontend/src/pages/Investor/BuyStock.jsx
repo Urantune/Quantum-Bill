@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import investorService from "@/services/investorService";
 import { getCurrentUserId } from "@/services/session.js";
+import { isTradingOpen, tradingHoursMessage } from "@/utils/tradingHours.js";
 
 const FEE_RATE = 0.036;
 
@@ -41,6 +42,11 @@ export default function BuyStock() {
 
         if (!quantity || Number(quantity) <= 0) {
             setError("Số lượng phải lớn hơn 0.");
+            return;
+        }
+
+        if (!isTradingOpen()) {
+            setError(tradingHoursMessage());
             return;
         }
 
@@ -104,7 +110,11 @@ export default function BuyStock() {
                         <div className="flex justify-between"><span>Tổng thanh toán</span><b>{netAmount.toLocaleString()} VND</b></div>
                     </div>
 
-                    <button type="submit" disabled={loading} className="px-6 py-2 rounded-lg bg-primary text-white">
+                    <p className="text-xs text-text-secondary">
+                        Giao dịch mở từ 10:00 đến 18:00 theo giờ server/local.
+                    </p>
+
+                    <button type="submit" disabled={loading || !isTradingOpen()} className="px-6 py-2 rounded-lg bg-primary text-white disabled:opacity-50">
                         {loading ? "Đang xử lý..." : "Mua"}
                     </button>
                 </form>

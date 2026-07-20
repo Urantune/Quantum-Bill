@@ -18,6 +18,15 @@ public class GlobalException {
 
     private static final String MIN_ATTRIBUTE = "min";
 
+    @ExceptionHandler(value = {IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<ApiResponse> handleBadRequest(RuntimeException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
+        apiResponse.setMessage(ex.getMessage());
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
     @ExceptionHandler(value = RuntimeException.class)
     public ResponseEntity<ApiResponse> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception occurred: ", ex);
@@ -74,4 +83,3 @@ public class GlobalException {
         return message.replace("{" + MIN_ATTRIBUTE + "}", minValue);
     }
 }
-

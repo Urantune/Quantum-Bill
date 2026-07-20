@@ -1,16 +1,20 @@
 import {useEffect, useState} from "react";
 import investorService from "@/services/investorService";
+import HoldingsTable from "@/components/Investor/HoldingsTable.jsx";
 
 export default function Portfolio() {
 
     const [data, setData] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         investorService.getPortfolio()
-            .then(res => setData(res.data));
+            .then(res => setData(res.data))
+            .catch(err => setError(err.response?.data?.message || err.message || "Không tải được danh mục."));
     }, []);
 
-    if (!data) return <div>Loading...</div>;
+    if (error) return <div className="p-6 text-red-500">{error}</div>;
+    if (!data) return <div className="p-6 text-text-secondary">Loading...</div>;
 
     return (
         <div className="p-6">
@@ -41,6 +45,15 @@ export default function Portfolio() {
                     <h3>{data.profitLoss?.toLocaleString()}</h3>
                 </div>
 
+            </div>
+
+            <div className="bg-bg-base border border-border-subtle rounded-xl p-4">
+                <h3 className="text-xl font-semibold mb-4">Holdings</h3>
+                {data.holdings?.length ? (
+                    <HoldingsTable holdings={data.holdings}/>
+                ) : (
+                    <p className="text-text-secondary">Bạn chưa nắm giữ cổ phiếu nào.</p>
+                )}
             </div>
 
         </div>

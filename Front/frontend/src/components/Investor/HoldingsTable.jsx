@@ -54,11 +54,11 @@ export default function HoldingsTable({
                     </td>
 
                     <td className="p-4">
-                        {item.averagePrice}
+                        {Number(item.averageBuyPrice || 0).toLocaleString()}
                     </td>
 
                     <td className="p-4">
-                        {item.currentPrice}
+                        {Number(item.currentPrice || 0).toLocaleString()}
                     </td>
 
                     <td
@@ -71,7 +71,7 @@ export default function HoldingsTable({
                         }
                         `}
                     >
-                        {item.profitLoss}
+                        {Number(item.profitLoss || 0).toLocaleString()}
                     </td>
 
                 </tr>

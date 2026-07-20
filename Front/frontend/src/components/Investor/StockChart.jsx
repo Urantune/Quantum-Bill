@@ -9,6 +9,13 @@ import {
 } from "recharts";
 
 export default function StockChart({ data }) {
+    if (!data?.length) {
+        return (
+            <div className="h-[400px] flex items-center justify-center text-text-secondary">
+                Chưa có lịch sử giá cho cổ phiếu này.
+            </div>
+        );
+    }
 
     const chartData = data.map(item => ({
         date: new Date(item.recordedAt)

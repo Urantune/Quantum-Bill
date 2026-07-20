@@ -4,13 +4,16 @@ import investorService from "@/services/investorService";
 export default function Wallet() {
 
     const [wallet, setWallet] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         investorService.getWallet()
-            .then(res => setWallet(res.data));
+            .then(res => setWallet(res.data))
+            .catch(err => setError(err.response?.data?.message || err.message || "Không tải được ví."));
     }, []);
 
-    if (!wallet) return <div>Loading...</div>;
+    if (error) return <div className="p-6 text-red-500">{error}</div>;
+    if (!wallet) return <div className="p-6 text-text-secondary">Loading...</div>;
 
     return (
         <div className="p-6">
