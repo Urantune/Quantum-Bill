@@ -26,6 +26,15 @@ import PricingPage from '@/pages/PricingPage/PricingPage';
 import NotFound from '@/pages/NotFound/NotFound';
 import OwnerDashboard from "@/pages/Owner/OwnerDashboard.jsx";
 
+// Các trang Admin
+import AdminRoute from '@/components/common/AdminRoute';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminStocks from '@/pages/admin/AdminStocks';
+import AdminSimulation from '@/pages/admin/AdminSimulation';
+import AdminWallet from '@/pages/admin/AdminWallet';
+import AdminRanking from '@/pages/admin/AdminRanking';
+
 // Các trang Auth
 import Login from '@/pages/Auth/Login';
 import Register from '@/pages/Auth/Register';
@@ -85,6 +94,16 @@ const AppRoutes = () => {
                         path="/investor/ranking"
                         element={<Ranking/>}
                     />
+                </Route>
+
+                {/* Các tuyến đường Admin */}
+                <Route element={<AdminRoute/>}>
+                    <Route path="/admin" element={<AdminDashboard/>}/>
+                    <Route path="/admin/users" element={<AdminUsers/>}/>
+                    <Route path="/admin/stocks" element={<AdminStocks/>}/>
+                    <Route path="/admin/simulation" element={<AdminSimulation/>}/>
+                    <Route path="/admin/wallet" element={<AdminWallet/>}/>
+                    <Route path="/admin/ranking" element={<AdminRanking/>}/>
                 </Route>
 
                 <Route path="*" element={<NotFound/>}/>

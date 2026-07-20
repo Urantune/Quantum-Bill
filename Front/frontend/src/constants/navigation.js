@@ -2,6 +2,11 @@
 // Tên icon tương ứng với bộ Lucide React (import động trong component Sidebar)
 
 export const NAV_ITEMS = [
+    {id: 'admin-dashboard', label: 'Dashboard Quản trị', path: '/admin', icon: 'LayoutDashboard', roles: ['ADMIN', 'ROLE_ADMIN']},
+    {id: 'admin-users', label: 'Quản lý Người dùng', path: '/admin/users', icon: 'Settings', roles: ['ADMIN', 'ROLE_ADMIN']},
+    {id: 'admin-stocks', label: 'Phê duyệt Cổ phiếu', path: '/admin/stocks', icon: 'Building', roles: ['ADMIN', 'ROLE_ADMIN']},
+    {id: 'admin-simulation', label: 'Giả lập Thị trường', path: '/admin/simulation', icon: 'TrendingUp', roles: ['ADMIN', 'ROLE_ADMIN']},
+    {id: 'admin-wallet', label: 'Quản lý Nạp rút', path: '/admin/wallet', icon: 'Wallet', roles: ['ADMIN', 'ROLE_ADMIN']},
     {id: 'investor-dashboard', label: 'Tổng quan investor', path: '/investor', icon: 'LayoutDashboard', roles: ['INVESTOR']},
     {id: 'investor-wallet', label: 'Ví tiền', path: '/investor/wallet', icon: 'Wallet', roles: ['INVESTOR']},
     {id: 'investor-stocks', label: 'Bảng giá cổ phiếu', path: '/investor/stocks', icon: 'TrendingUp', roles: ['INVESTOR']},
@@ -9,7 +14,7 @@ export const NAV_ITEMS = [
     {id: 'investor-sell', label: 'Bán cổ phiếu', path: '/investor/sell', icon: 'CreditCard', roles: ['INVESTOR']},
     {id: 'investor-portfolio', label: 'Danh mục', path: '/investor/portfolio', icon: 'BarChart3', roles: ['INVESTOR']},
     {id: 'investor-transactions', label: 'Lịch sử giao dịch', path: '/investor/transactions', icon: 'LayoutDashboard', roles: ['INVESTOR']},
-    {id: 'investor-ranking', label: 'Xếp hạng', path: '/investor/ranking', icon: 'Star', roles: ['INVESTOR', 'ADMIN']},
+    {id: 'investor-ranking', label: 'Xếp hạng', path: '/investor/ranking', icon: 'Star', roles: ['INVESTOR', 'ADMIN', 'ROLE_ADMIN']},
     {id: 'owner-dashboard', label: 'Doanh nghiệp', path: '/owner', icon: 'Building', roles: ['OWNER'], statuses: ['PENDING']}
 ];
 
