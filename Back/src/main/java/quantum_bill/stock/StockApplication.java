@@ -13,7 +13,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 		"quantum_bill.stock.investor.repository",
 		"quantum_bill.stock.owner.repository"
 })
-@EnableMongoRepositories(basePackages = "quantum_bill.stock.owner.mongo")
+@EnableMongoRepositories(basePackages = {
+		"quantum_bill.stock.owner.mongo",
+		"quantum_bill.stock.common.repository"
+})
 public class StockApplication {
 
 	public static void main(String[] args) {

@@ -4,6 +4,7 @@ import timeService from '@/services/timeService.js';
 const SetTime = () => {
     const [form, setForm] = useState({ openTime: '10:00', closeTime: '18:00' });
     const [marketOpen, setMarketOpen] = useState(false);
+    const [updatedAt, setUpdatedAt] = useState(null);
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(true);
 
@@ -12,6 +13,7 @@ const SetTime = () => {
             .then((data) => {
                 setForm({ openTime: data.openTime, closeTime: data.closeTime });
                 setMarketOpen(Boolean(data.marketOpen));
+                setUpdatedAt(data.date);
             })
             .catch((error) => setMessage(error.response?.data?.message || 'Không tải được giờ giao dịch.'))
             .finally(() => setLoading(false));
@@ -24,6 +26,7 @@ const SetTime = () => {
             const data = await timeService.updateTradingTime(form);
             setForm({ openTime: data.openTime, closeTime: data.closeTime });
             setMarketOpen(Boolean(data.marketOpen));
+            setUpdatedAt(data.date);
             setMessage('Đã cập nhật giờ giao dịch.');
         } catch (error) {
             setMessage(error.response?.data?.message || 'Cập nhật thất bại.');
@@ -52,6 +55,7 @@ const SetTime = () => {
                         required
                     />
                 </div>
+
                 <div>
                     <label className="text-xs font-semibold text-text-secondary">Giờ đóng cửa</label>
                     <input
@@ -66,6 +70,10 @@ const SetTime = () => {
                 <div className="text-sm text-text-secondary">
                     Trạng thái hiện tại: <span className={marketOpen ? 'text-success' : 'text-warning'}>{marketOpen ? 'Đang mở' : 'Đang đóng'}</span>
                 </div>
+
+                {updatedAt && (
+                    <div className="text-xs text-text-secondary">Cập nhật: {new Date(updatedAt).toLocaleString('vi-VN')}</div>
+                )}
 
                 {message && <div className="text-sm text-primary">{message}</div>}
 
