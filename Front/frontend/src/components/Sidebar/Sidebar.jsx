@@ -7,7 +7,6 @@ import {
     Wallet,
     Newspaper,
     BarChart3,
-    CreditCard,
     Settings,
     X,
     LineChart,
@@ -16,6 +15,7 @@ import {
 import { NAV_ITEMS } from '@/constants/navigation';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/context/AuthContext';
+import { getEffectiveRole } from '@/utils/roleRedirect.js';
 
 // Map tên icon (string) sang component Lucide thực tế
 const ICON_MAP = {
@@ -25,7 +25,6 @@ const ICON_MAP = {
     Wallet,
     Newspaper,
     BarChart3,
-    CreditCard,
     Settings,
     Building,
 };
@@ -37,16 +36,9 @@ const ICON_MAP = {
  */
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     const { user } = useAuth();
-    const storedRoles = user?.roles || [];
-    const userRoles = user?.username === 'admin'
-        ? ['ADMIN']
-        : storedRoles.includes('OWNER')
-            ? ['OWNER']
-            : storedRoles.includes('INVESTOR')
-                ? ['INVESTOR']
-                : storedRoles;
+    const effectiveRole = getEffectiveRole(user);
     const visibleItems = NAV_ITEMS.filter((item) => {
-        const roleAllowed = !item.roles || item.roles.some((role) => userRoles.includes(role));
+        const roleAllowed = !item.roles || item.roles.includes(effectiveRole);
         const statusAllowed = !item.statuses || item.statuses.includes(user?.status);
         return roleAllowed && statusAllowed;
     });

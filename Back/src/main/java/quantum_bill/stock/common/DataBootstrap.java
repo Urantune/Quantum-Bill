@@ -3,6 +3,7 @@ package quantum_bill.stock.common;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import quantum_bill.stock.admin.entity.Role;
 import quantum_bill.stock.admin.entity.User;
 import quantum_bill.stock.admin.entity.UserRole;
@@ -38,6 +39,7 @@ public class DataBootstrap implements CommandLineRunner {
 	}
 
 	@Override
+	@Transactional
 	public void run(String... args) {
 		ensureRole("ADMIN", "System administrator");
 		ensureRole("OWNER", "Stock investor");
@@ -69,6 +71,7 @@ public class DataBootstrap implements CommandLineRunner {
 			user.setUpdatedAt(now);
 			return userRepository.save(user);
 		});
+		removeUnexpectedRoles(admin, "ADMIN");
 		if (!userRoleRepository.existsByUserIdAndRoleName(admin.getId(), "ADMIN")) {
 			UserRole userRole = new UserRole();
 			userRole.setUser(admin);
@@ -90,10 +93,17 @@ public class DataBootstrap implements CommandLineRunner {
 			nextUser.setUpdatedAt(now);
 			return userRepository.save(nextUser);
 		});
+		removeUnexpectedRoles(user, roleName);
 		ensureUserRole(user, roleName);
 		if (withWallet) {
 			ensureWallet(user);
 		}
+	}
+
+	private void removeUnexpectedRoles(User user, String expectedRole) {
+		userRoleRepository.findByUserId(user.getId()).stream()
+				.filter(userRole -> !expectedRole.equals(userRole.getRole().getName()))
+				.forEach(userRoleRepository::delete);
 	}
 
 	private void ensureUserRole(User user, String roleName) {

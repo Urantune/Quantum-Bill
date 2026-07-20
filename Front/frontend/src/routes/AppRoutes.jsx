@@ -8,8 +8,6 @@ import { getRoleHomePath } from '@/utils/roleRedirect.js';
 import InvestorDashboard from '@/pages/Investor/Dashboard';
 import Wallet from '@/pages/Investor/Wallet';
 import StockList from '@/pages/Investor/StockList';
-import BuyStock from '@/pages/Investor/BuyStock';
-import SellStock from '@/pages/Investor/SellStock';
 import InvestorPortfolio from '@/pages/Investor/Portfolio';
 import TransactionHistory from '@/pages/Investor/TransactionHistory';
 import Ranking from '@/pages/Investor/Ranking';
@@ -26,15 +24,6 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminStocks from '@/pages/admin/AdminStocks';
 import AdminSimulation from '@/pages/admin/AdminSimulation';
 import SetTime from '@/pages/SetTime/SetTime';
-
-// Các trang Admin
-import AdminRoute from '@/components/common/AdminRoute';
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminStocks from '@/pages/admin/AdminStocks';
-import AdminSimulation from '@/pages/admin/AdminSimulation';
-import AdminWallet from '@/pages/admin/AdminWallet';
-import AdminRanking from '@/pages/admin/AdminRanking';
 
 // Các trang Auth
 import Login from '@/pages/Auth/Login';
@@ -75,8 +64,8 @@ const AppRoutes = () => {
                         <Route path="/owner" element={<InvestorDashboard/>}/>
                         <Route path="/owner/wallet" element={<Wallet/>}/>
                         <Route path="/owner/stocks" element={<StockList/>}/>
-                        <Route path="/owner/buy" element={<BuyStock/>}/>
-                        <Route path="/owner/sell" element={<SellStock/>}/>
+                        <Route path="/owner/buy" element={<Navigate to="/owner/stocks" replace/>}/>
+                        <Route path="/owner/sell" element={<Navigate to="/owner/stocks" replace/>}/>
                         <Route path="/owner/stocks/:id" element={<StockDetail/>}/>
                         <Route path="/owner/portfolio" element={<InvestorPortfolio/>}/>
                         <Route path="/owner/transactions" element={<TransactionHistory/>}/>
@@ -95,15 +84,6 @@ const AppRoutes = () => {
                 </Route>
 
                 {/* Các tuyến đường Admin */}
-                <Route element={<AdminRoute/>}>
-                    <Route path="/admin" element={<AdminDashboard/>}/>
-                    <Route path="/admin/users" element={<AdminUsers/>}/>
-                    <Route path="/admin/stocks" element={<AdminStocks/>}/>
-                    <Route path="/admin/simulation" element={<AdminSimulation/>}/>
-                    <Route path="/admin/wallet" element={<AdminWallet/>}/>
-                    <Route path="/admin/ranking" element={<AdminRanking/>}/>
-                </Route>
-
                 <Route path="*" element={<NotFound/>}/>
             </Route>
 
