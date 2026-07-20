@@ -11,9 +11,11 @@ import {
     Settings,
     X,
     LineChart,
+    Building,
 } from 'lucide-react';
 import { NAV_ITEMS } from '@/constants/navigation';
 import { cn } from '@/utils/cn';
+import { useAuth } from '@/context/AuthContext';
 
 // Map tên icon (string) sang component Lucide thực tế
 const ICON_MAP = {
@@ -25,6 +27,7 @@ const ICON_MAP = {
     BarChart3,
     CreditCard,
     Settings,
+    Building,
 };
 
 /**
@@ -33,6 +36,14 @@ const ICON_MAP = {
  * - Mobile/Tablet (<1200px): ẩn mặc định, hiện dạng Drawer trượt từ trái khi isOpen=true
  */
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
+    const { user } = useAuth();
+    const userRoles = user?.roles || [];
+    const visibleItems = NAV_ITEMS.filter((item) => {
+        const roleAllowed = !item.roles || item.roles.some((role) => userRoles.includes(role));
+        const statusAllowed = !item.statuses || item.statuses.includes(user?.status);
+        return roleAllowed || statusAllowed;
+    });
+
     const navContent = (
         <>
             {/* Logo */}
@@ -61,7 +72,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
             {/* Menu điều hướng */}
             <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                {NAV_ITEMS.map((item) => {
+                {visibleItems.map((item) => {
                     const Icon = ICON_MAP[item.icon];
                     return (
                         <NavLink
@@ -100,16 +111,16 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             {/* Khối thông tin gói dịch vụ ở cuối sidebar */}
             {!isCollapsed && (
                 <div className="p-4 m-3 rounded-card bg-gradient-primary/10 border border-primary/20">
-                    <p className="text-xs font-semibold text-primary mb-1">Nâng cấp Premium</p>
+                    <p className="text-xs font-semibold text-primary mb-1">Quantum Bill</p>
                     <p className="text-xs text-text-secondary leading-relaxed mb-3">
-                        Mở khóa dữ liệu thời gian thực và phân tích AI chuyên sâu.
+                        Giao dịch giả lập, giá tự cập nhật và lịch sử giá lưu MongoDB.
                     </p>
                     <NavLink
-                        to="/pricing"
+                        to="/"
                         onClick={onClose}
                         className="block text-center text-xs font-semibold bg-primary hover:bg-primary-hover text-white py-2 rounded-pill transition-colors duration-200"
                     >
-                        Xem gói dịch vụ
+                        Về trang chính
                     </NavLink>
                 </div>
             )}

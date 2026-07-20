@@ -1,243 +1,161 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import apiClient from '@/services/api';
 
 const AuthContext = createContext(null);
 
-// Hàm giải mã JWT token ở client-side
-const decodeToken = (token) => {
+const USER_STORAGE_KEY = 'quantum_bill_user';
+const TOKEN_STORAGE_KEY = 'quantum_bill_token';
+
+function decodeToken(token) {
     try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            window.atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-        );
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error('Failed to decode JWT token:', e);
+        const payload = token.split('.')[1];
+        const base64Url = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const base64 = base64Url.padEnd(base64Url.length + (4 - base64Url.length % 4) % 4, '=');
+        return JSON.parse(window.atob(base64));
+    } catch {
         return null;
     }
-};
+}
+
+function normalizeUser(user) {
+    if (!user) return null;
+    const username = user.username || user.sub;
+    return {
+        id: user.id,
+        fullName: user.fullName || username,
+        email: user.email,
+        username,
+        status: user.status || 'ACTIVE',
+        roles: Array.isArray(user.roles) ? user.roles : [],
+        createdAt: user.createdAt,
+    };
+}
+
+function userFromAuthResponse(data) {
+    if (data?.result?.token) {
+        const payload = decodeToken(data.result.token);
+        return {
+            token: data.result.token,
+            user: normalizeUser(payload),
+        };
+    }
+
+    if (data?.token) {
+        const payload = decodeToken(data.token);
+        return {
+            token: data.token,
+            user: normalizeUser(payload),
+        };
+    }
+
+    return {
+        token: null,
+        user: normalizeUser(data?.result || data),
+    };
+}
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Hàm Đăng xuất (khai báo trước useEffect để tránh lỗi Temporal Dead Zone)
-    const logout = useCallback(async () => {
-        try {
-            const currentToken = localStorage.getItem('token');
-            if (currentToken) {
-                // Gọi API logout để invalidate token trên server
-                await apiClient.post('/api/auth/logout', { token: currentToken });
-            }
-        } catch (error) {
-            console.error('Logout API call failed:', error);
-        } finally {
-            // Luôn xóa state ở client dù API call thành hay bại
-            setToken(null);
-            setUser(null);
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            delete apiClient.defaults.headers.common['Authorization'];
-        }
-    }, []);
-
-    // Khi khởi chạy, khôi phục session từ localStorage
     useEffect(() => {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-
-        if (storedToken && storedUser) {
+        const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+        const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+        if (storedUser) {
+            try {
+                setUser(normalizeUser(JSON.parse(storedUser)));
+            } catch {
+                localStorage.removeItem(USER_STORAGE_KEY);
+            }
+        }
+        if (storedToken) {
             setToken(storedToken);
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-            // Gắn token vào axios defaults
-            apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            apiClient.defaults.headers.common.Authorization = `Bearer ${storedToken}`;
         }
         setIsLoading(false);
+    }, []);
 
-        // Biến quản lý hàng đợi và trạng thái làm mới token
-        let isRefreshing = false;
-        let failedQueue = [];
+    const persistSession = useCallback((nextUser, nextToken = null) => {
+        const normalized = normalizeUser(nextUser);
+        setUser(normalized);
+        setToken(nextToken);
 
-        const processQueue = (error, token = null) => {
-            failedQueue.forEach((prom) => {
-                if (error) {
-                    prom.reject(error);
-                } else {
-                    prom.resolve(token);
-                }
-            });
-            failedQueue = [];
-        };
+        if (normalized) {
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalized));
+        } else {
+            localStorage.removeItem(USER_STORAGE_KEY);
+        }
 
-        const responseInterceptor = apiClient.interceptors.response.use(
-            (response) => response,
-            async (error) => {
-                const originalRequest = error.config;
+        if (nextToken) {
+            localStorage.setItem(TOKEN_STORAGE_KEY, nextToken);
+            apiClient.defaults.headers.common.Authorization = `Bearer ${nextToken}`;
+        } else {
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
+            delete apiClient.defaults.headers.common.Authorization;
+        }
 
-                // Nếu là lỗi 401 (Unauthorized) và request chưa được thử lại
-                if (error.response?.status === 401 && !originalRequest._retry) {
-                    // Tránh vòng lặp vô hạn khi chính request refresh token hoặc login bị 401
-                    if (originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/auth/login')) {
-                        return Promise.reject(error);
-                    }
+        return normalized;
+    }, []);
 
-                    if (isRefreshing) {
-                        return new Promise((resolve, reject) => {
-                            failedQueue.push({ resolve, reject });
-                        })
-                            .then((token) => {
-                                originalRequest.headers['Authorization'] = `Bearer ${token}`;
-                                return apiClient(originalRequest);
-                            })
-                            .catch((err) => {
-                                return Promise.reject(err);
-                            });
-                    }
-
-                    originalRequest._retry = true;
-                    isRefreshing = true;
-
-                    const currentToken = localStorage.getItem('token');
-                    if (!currentToken) {
-                        isRefreshing = false;
-                        return Promise.reject(error);
-                    }
-
-                    return new Promise((resolve, reject) => {
-                        // Gọi axios trực tiếp đến endpoint refresh để bỏ qua interceptor
-                        axios.post('/api/auth/refresh', { token: currentToken })
-                            .then((res) => {
-                                const authResult = res.data.result;
-                                if (authResult && authResult.token) {
-                                    const newToken = authResult.token;
-
-                                    // Cập nhật token trong localStorage và State
-                                    localStorage.setItem('token', newToken);
-                                    setToken(newToken);
-
-                                    // Cập nhật Authorization header cho các request tương lai và hiện tại
-                                    apiClient.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-                                    originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-
-                                    processQueue(null, newToken);
-                                    resolve(apiClient(originalRequest));
-                                } else {
-                                    throw new Error('Mã xác thực mới không hợp lệ');
-                                }
-                            })
-                            .catch((err) => {
-                                processQueue(err, null);
-                                // Âm thầm đăng xuất khi refresh token thất bại hoàn toàn
-                                logout();
-                                reject(err);
-                            })
-                            .finally(() => {
-                                isRefreshing = false;
-                            });
-                    });
-                }
-
-                // Chuyển đổi lỗi axios thông thường sang Error có message rõ ràng để hiển thị
-                const message = error.response?.data?.message || error.message || 'Đã xảy ra lỗi không xác định';
-                return Promise.reject(new Error(message));
-            }
-        );
-
-        // Hủy đăng ký interceptor khi Provider unmount
-        return () => {
-            apiClient.interceptors.response.eject(responseInterceptor);
-        };
-    }, [logout]);
-
-    // Hàm Đăng nhập
-    const login = async (username, password) => {
+    const login = useCallback(async (username, password) => {
         try {
             setIsLoading(true);
             const response = await apiClient.post('/api/auth/login', { username, password });
-
-            // Format trả về của Spring Boot: ApiResponse<AuthenticationResponse>
-            const authResult = response.data.result;
-            if (authResult && authResult.token) {
-                const jwtToken = authResult.token;
-                const payload = decodeToken(jwtToken);
-
-                if (payload) {
-                    const authenticatedUser = {
-                        id: payload.id,
-                        username: payload.sub,
-                        roles: payload.roles || [],
-                        fullName: payload.sub, // Fallback do JWT không chứa fullName
-                    };
-
-                    setToken(jwtToken);
-                    setUser(authenticatedUser);
-
-                    localStorage.setItem('token', jwtToken);
-                    localStorage.setItem('user', JSON.stringify(authenticatedUser));
-
-                    apiClient.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
-                    return { success: true };
-                }
+            const { user: responseUser, token: responseToken } = userFromAuthResponse(response.data);
+            if (!responseUser) {
+                throw new Error('Backend không trả thông tin đăng nhập hợp lệ.');
             }
-            throw new Error('Mã xác thực không hợp lệ');
+            const loggedInUser = persistSession(responseUser, responseToken);
+            return { success: true, user: loggedInUser };
         } catch (error) {
-            console.error('Login error:', error);
-            const errMsg = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
-            return { success: false, error: errMsg };
+            return {
+                success: false,
+                error: error.response?.data?.message || error.message || 'Đăng nhập thất bại',
+            };
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [persistSession]);
 
-    // Hàm Đăng ký
-    const register = async (fullName, email, username, password, role) => {
+    const register = useCallback(async (fullName, email, username, password, role) => {
         try {
             setIsLoading(true);
-            // API: /api/auth/register
-            await apiClient.post('/api/auth/register', {
+            const response = await apiClient.post('/api/auth/register', {
                 fullName,
                 email,
                 username,
                 password,
                 role,
             });
-
-            // Sau khi đăng ký thành công, thực hiện tự động đăng nhập
-            return await login(username, password);
+            const { user: responseUser, token: responseToken } = userFromAuthResponse(response.data);
+            if (!responseUser) {
+                throw new Error('Backend không trả thông tin đăng ký hợp lệ.');
+            }
+            const registeredUser = persistSession(responseUser, responseToken);
+            return { success: true, user: registeredUser };
         } catch (error) {
-            console.error('Register error:', error);
-            const errMsg = error.response?.data?.message || error.message || 'Đăng ký thất bại';
-            return { success: false, error: errMsg };
+            return {
+                success: false,
+                error: error.response?.data?.message || error.message || 'Đăng ký thất bại',
+            };
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [persistSession]);
 
+    const logout = useCallback(() => {
+        persistSession(null);
+    }, [persistSession]);
 
+    const forgotPassword = useCallback(async () => {
+        return {
+            success: false,
+            error: 'Chức năng quên mật khẩu chưa nằm trong scope backend hiện tại.',
+        };
+    }, []);
 
-    // Hàm Quên mật khẩu
-    const forgotPassword = async (email) => {
-        try {
-            setIsLoading(true);
-            await apiClient.post('/api/auth/forgot-password', { email });
-            return { success: true };
-        } catch (error) {
-            console.error('Forgot password error:', error);
-            const errMsg = error.response?.data?.message || error.message || 'Gửi yêu cầu thất bại';
-            return { success: false, error: errMsg };
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const value = {
+    const value = useMemo(() => ({
         user,
         token,
         isAuthenticated: !!user,
@@ -246,7 +164,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         forgotPassword,
-    };
+    }), [forgotPassword, isLoading, login, logout, register, token, user]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
