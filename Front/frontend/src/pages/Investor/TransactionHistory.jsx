@@ -22,10 +22,9 @@ export default function TransactionHistory() {
 
         let result = transactions;
 
-        // Filter BUY / SELL
         if (filter !== "ALL") {
             result = result.filter(
-                item => item.type === filter
+                item => item.type === filter || item.status === filter
             );
         }
 
@@ -76,6 +75,9 @@ export default function TransactionHistory() {
                     <option value="ALL">All</option>
                     <option value="BUY">Buy</option>
                     <option value="SELL">Sell</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="REJECTED">Rejected</option>
                 </select>
 
             </div>
@@ -116,6 +118,9 @@ export default function TransactionHistory() {
                         <option value="ALL">All</option>
                         <option value="BUY">Buy</option>
                         <option value="SELL">Sell</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
                     </select>
 
                 </div>
@@ -127,6 +132,7 @@ export default function TransactionHistory() {
 
                         <th className="p-4 text-left">ID</th>
                         <th className="p-4 text-left">Type</th>
+                        <th className="p-4 text-left">Status</th>
                         <th className="p-4 text-left">Symbol</th>
                         <th className="p-4 text-left">Qty</th>
                         <th className="p-4 text-left">Price</th>
@@ -156,16 +162,22 @@ export default function TransactionHistory() {
 
                             <td className="p-4">
 
-                                <span
-                                    className={
-                                        item.type === "BUY"
-                                            ? "text-green-500"
-                                            : "text-red-500"
-                                    }
-                                >
+                                <span className={item.type === "BUY" ? "text-green-500" : "text-red-500"}>
                                     {item.type}
                                 </span>
 
+                            </td>
+
+                            <td className="p-4">
+                                <span className={
+                                    item.status === "APPROVED"
+                                        ? "text-green-500"
+                                        : item.status === "REJECTED"
+                                            ? "text-red-500"
+                                            : "text-yellow-500"
+                                }>
+                                    {item.status || "APPROVED"}
+                                </span>
                             </td>
 
                             <td className="p-4">

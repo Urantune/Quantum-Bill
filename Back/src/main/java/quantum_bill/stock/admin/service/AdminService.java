@@ -56,7 +56,7 @@ public class AdminService {
 		user.setStatus("ACTIVE");
 		user.setUpdatedAt(LocalDateTime.now());
 		User saved = userRepository.save(user);
-		authService.assignRole(saved, "OWNER");
+		authService.assignRole(saved, "INVESTOR");
 		return authService.toResponse(saved);
 	}
 

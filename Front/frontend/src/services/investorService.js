@@ -3,7 +3,7 @@ import { getCurrentUserId } from "@/services/session.js";
 
 function requireUserId(userId = getCurrentUserId()) {
     if (!userId) {
-        throw new Error("Bạn cần đăng nhập investor trước khi dùng chức năng này.");
+        throw new Error("Bạn cần đăng nhập tài khoản OWNER trước khi dùng chức năng giao dịch.");
     }
     return userId;
 }
@@ -11,6 +11,17 @@ function requireUserId(userId = getCurrentUserId()) {
 const investorService = {
     getWallet(userId) {
         return axiosClient.get(`/api/trading/wallet/${requireUserId(userId)}`);
+    },
+
+    createTopUpSession(amount, userId) {
+        return axiosClient.post('/api/trading/topup-sessions', {
+            userId: requireUserId(userId),
+            amount,
+        });
+    },
+
+    completeTopUp(token) {
+        return axiosClient.post(`/api/trading/topup-sessions/${token}/complete`);
     },
 
     getPortfolio(userId) {

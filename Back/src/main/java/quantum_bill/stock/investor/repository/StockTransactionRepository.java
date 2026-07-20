@@ -9,4 +9,6 @@ public interface StockTransactionRepository extends JpaRepository<StockTransacti
 	List<StockTransaction> findByUserIdOrderByCreatedAtDesc(Long userId);
 
 	List<StockTransaction> findAllByOrderByCreatedAtDesc();
+
+	List<StockTransaction> findByStatusOrderByCreatedAtDesc(String status);
 }

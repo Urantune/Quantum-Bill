@@ -2,6 +2,7 @@ import {Routes, Route, Navigate} from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import PrivateRoute from '@/components/common/PrivateRoute';
+import RoleRoute from '@/components/common/RoleRoute';
 import { useAuth } from '@/context/AuthContext';
 import { getRoleHomePath } from '@/utils/roleRedirect.js';
 import InvestorDashboard from '@/pages/Investor/Dashboard';
@@ -13,18 +14,18 @@ import InvestorPortfolio from '@/pages/Investor/Portfolio';
 import TransactionHistory from '@/pages/Investor/TransactionHistory';
 import Ranking from '@/pages/Investor/Ranking';
 import StockDetail from "@/pages/Investor/StockDetail";
+import TopUpPage from '@/pages/Investor/TopUpPage';
 
 // Các trang Dashboard chính
 import Dashboard from '@/pages/Dashboard/Dashboard';
-import Markets from '@/pages/Markets/Markets';
-import Portfolio from '@/pages/Portfolio/Portfolio';
-import News from '@/pages/News/News';
-import Settings from '@/pages/Settings/Settings';
-import WatchlistPage from '@/pages/WatchlistPage/WatchlistPage';
-import Analytics from '@/pages/Analytics/Analytics';
-import PricingPage from '@/pages/PricingPage/PricingPage';
 import NotFound from '@/pages/NotFound/NotFound';
 import OwnerDashboard from "@/pages/Owner/OwnerDashboard.jsx";
+import AdminLayout from '@/pages/admin/AdminLayout';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminStocks from '@/pages/admin/AdminStocks';
+import AdminSimulation from '@/pages/admin/AdminSimulation';
+import SetTime from '@/pages/SetTime/SetTime';
 
 // Các trang Admin
 import AdminRoute from '@/components/common/AdminRoute';
@@ -58,42 +59,39 @@ const AppRoutes = () => {
             {/* Các tuyến đường sử dụng MainLayout */}
             <Route element={<MainLayout/>}>
                 <Route path="/" element={<Dashboard/>}/>
-                <Route path="/markets" element={<Markets/>}/>
-                <Route path="/news" element={<News/>}/>
-                <Route path="/analytics" element={<Analytics/>}/>
-                <Route path="/pricing" element={<PricingPage/>}/>
+                <Route path="/investor/topup/:token" element={<TopUpPage/>}/>
+                <Route path="/owner/topup/:token" element={<TopUpPage/>}/>
 
                 {/* Các tuyến đường ứng dụng được bảo vệ */}
                 <Route element={<PrivateRoute/>}>
                     <Route path="/app" element={<RoleHome/>}/>
-                    <Route path="/owner" element={<OwnerDashboard/>}/>
 
-                    <Route path="/investor" element={<InvestorDashboard/>}/>
+                    <Route element={<RoleRoute roles={['INVESTOR']} allowPendingOwner/>}>
+                        <Route path="/investor" element={<OwnerDashboard/>}/>
+                        <Route path="/investor/stocks/:id" element={<StockDetail/>}/>
+                    </Route>
 
-                    <Route path="/investor/wallet" element={<Wallet/>}/>
+                    <Route element={<RoleRoute roles={['OWNER']}/>}>
+                        <Route path="/owner" element={<InvestorDashboard/>}/>
+                        <Route path="/owner/wallet" element={<Wallet/>}/>
+                        <Route path="/owner/stocks" element={<StockList/>}/>
+                        <Route path="/owner/buy" element={<BuyStock/>}/>
+                        <Route path="/owner/sell" element={<SellStock/>}/>
+                        <Route path="/owner/stocks/:id" element={<StockDetail/>}/>
+                        <Route path="/owner/portfolio" element={<InvestorPortfolio/>}/>
+                        <Route path="/owner/transactions" element={<TransactionHistory/>}/>
+                        <Route path="/owner/ranking" element={<Ranking/>}/>
+                    </Route>
 
-                    <Route path="/investor/stocks" element={<StockList/>}/>
-
-                    <Route path="/investor/buy" element={<BuyStock/>}/>
-
-                    <Route path="/investor/sell" element={<SellStock/>}/>
-
-                    <Route path="/investor/stocks/:id" element={<StockDetail/>}/>
-
-                    <Route
-                        path="/investor/portfolio"
-                        element={<InvestorPortfolio/>}
-                    />
-
-                    <Route
-                        path="/investor/transactions"
-                        element={<TransactionHistory/>}
-                    />
-
-                    <Route
-                        path="/investor/ranking"
-                        element={<Ranking/>}
-                    />
+                    <Route element={<RoleRoute roles={['ADMIN']}/>}>
+                        <Route path="/admin" element={<AdminLayout/>}>
+                            <Route index element={<AdminDashboard/>}/>
+                            <Route path="users" element={<AdminUsers/>}/>
+                            <Route path="stocks" element={<AdminStocks/>}/>
+                            <Route path="simulation" element={<AdminSimulation/>}/>
+                            <Route path="settime" element={<SetTime/>}/>
+                        </Route>
+                    </Route>
                 </Route>
 
                 {/* Các tuyến đường Admin */}

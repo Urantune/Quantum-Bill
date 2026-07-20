@@ -38,5 +38,35 @@ export const ownerService = {
                 response => response.data,
                 error => { return Promise.reject(error); }
             );
-    }
+    },
+
+    deleteStock: (id) => {
+        return apiClient.delete(`/api/stocks/${id}`)
+            .then(response => response.data);
+    },
+
+    simulateMarket: (force = true) => {
+        return apiClient.post('/api/market/simulate', null, { params: { force } })
+            .then(response => response.data);
+    },
+
+    getTransactions: () => {
+        return apiClient.get('/api/trading/transactions')
+            .then(response => response.data);
+    },
+
+    getPendingOrders: () => {
+        return apiClient.get('/api/trading/orders/pending')
+            .then(response => response.data);
+    },
+
+    approveOrder: (orderId) => {
+        return apiClient.post(`/api/trading/orders/${orderId}/approve`)
+            .then(response => response.data);
+    },
+
+    rejectOrder: (orderId) => {
+        return apiClient.post(`/api/trading/orders/${orderId}/reject`)
+            .then(response => response.data);
+    },
 };

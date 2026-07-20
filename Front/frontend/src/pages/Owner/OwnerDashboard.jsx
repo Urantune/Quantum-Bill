@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { PlusCircle, Edit3, Building, TrendingUp, AlertTriangle, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusCircle, Edit3, Building, TrendingUp, AlertTriangle, Search, Filter, ChevronLeft, ChevronRight, Trash2, RefreshCw } from 'lucide-react';
 import { ownerService } from '@/services/ownerService';
 import { MOTION } from '@/constants/theme';
 import { formatCurrency } from '@/utils/formatters';
@@ -10,6 +11,9 @@ import StockFormModal from './StockFormModal';
 
 const OwnerDashboard = () => {
     const [stocks, setStocks] = useState([]);
+    const [transactions, setTransactions] = useState([]);
+    const [pendingOrders, setPendingOrders] = useState([]);
+    const [simulationMessage, setSimulationMessage] = useState('');
     const [pageInfo, setPageInfo] = useState({ currentPage: 0, totalPages: 0, totalElements: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -24,7 +28,13 @@ const OwnerDashboard = () => {
     const fetchOwnerData = async (page = 0) => {
         setLoading(true);
         try {
-            const allItems = await ownerService.getMyStocks();
+            const [allItems, txItems] = await Promise.all([
+                ownerService.getMyStocks(),
+                ownerService.getTransactions().catch(() => []),
+            ]);
+            const pendingItems = await ownerService.getPendingOrders().catch(() => []);
+            setTransactions(Array.isArray(txItems) ? txItems.slice(0, 10) : []);
+            setPendingOrders(Array.isArray(pendingItems) ? pendingItems : []);
 
             const filtered = allItems.filter(stock => {
                 const matchesSearch = stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,6 +83,29 @@ const OwnerDashboard = () => {
         }
     };
 
+    const handleDelete = async (stock) => {
+        if (!window.confirm(`Xóa mã ${stock.symbol}?`)) return;
+        await ownerService.deleteStock(stock.id);
+        fetchOwnerData(currentPage);
+    };
+
+    const handleSimulation = async () => {
+        setSimulationMessage('');
+        const result = await ownerService.simulateMarket(true);
+        setSimulationMessage(`Đã cập nhật ${Array.isArray(result) ? result.length : 0} mã cổ phiếu.`);
+        fetchOwnerData(currentPage);
+    };
+
+    const handleApproveOrder = async (orderId) => {
+        await ownerService.approveOrder(orderId);
+        fetchOwnerData(currentPage);
+    };
+
+    const handleRejectOrder = async (orderId) => {
+        await ownerService.rejectOrder(orderId);
+        fetchOwnerData(currentPage);
+    };
+
     if (loading && stocks.length === 0) {
         return <div className="text-center py-20 text-text-secondary text-sm">Đang nạp cấu trúc dữ liệu doanh nghiệp...</div>;
     }
@@ -95,7 +128,14 @@ const OwnerDashboard = () => {
                 >
                     <PlusCircle className="w-4 h-4" /> Đăng ký niêm yết
                 </button>
+                <button
+                    onClick={handleSimulation}
+                    className="btn-primary flex items-center gap-2 self-start sm:self-auto text-sm px-4 py-2.5"
+                >
+                    <RefreshCw className="w-4 h-4" /> Random giá
+                </button>
             </div>
+            {simulationMessage && <div className="text-sm text-success">{simulationMessage}</div>}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 <div className="panel p-5 flex items-center gap-4">
@@ -118,6 +158,46 @@ const OwnerDashboard = () => {
                         <p className="text-xs text-text-secondary font-medium">Trang hiển thị</p>
                         <p className="text-xl font-bold text-text-primary mt-0.5">{pageInfo.currentPage + 1} / {pageInfo.totalPages}</p>
                     </div>
+                </div>
+            </div>
+
+            <div className="panel overflow-hidden">
+                <div className="px-6 py-4 border-b border-border-subtle">
+                    <h2 className="text-sm font-semibold text-text-primary">Lệnh mua/bán chờ duyệt</h2>
+                    <p className="text-xs text-text-secondary mt-1">Người đầu tư đặt lệnh, tài khoản công ty/sàn duyệt thì ví và danh mục mới thay đổi.</p>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead>
+                        <tr className="border-b border-border-subtle text-xs text-text-secondary uppercase">
+                            <th className="px-6 py-3">Nhà đầu tư</th>
+                            <th className="px-6 py-3">Mã</th>
+                            <th className="px-6 py-3">Loại</th>
+                            <th className="px-6 py-3 text-right">Số lượng</th>
+                            <th className="px-6 py-3 text-right">Giá</th>
+                            <th className="px-6 py-3 text-right">Tổng</th>
+                            <th className="px-6 py-3 text-center">Duyệt</th>
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-subtle">
+                        {pendingOrders.length === 0 ? (
+                            <tr><td colSpan="7" className="px-6 py-8 text-center text-text-muted">Không có lệnh đang chờ.</td></tr>
+                        ) : pendingOrders.map((order) => (
+                            <tr key={order.id}>
+                                <td className="px-6 py-3">{order.username || order.userId}</td>
+                                <td className="px-6 py-3 font-mono text-primary">{order.symbol}</td>
+                                <td className={cn("px-6 py-3 font-semibold", order.type === 'BUY' ? 'text-success' : 'text-danger')}>{order.type}</td>
+                                <td className="px-6 py-3 text-right">{order.quantity}</td>
+                                <td className="px-6 py-3 text-right">{formatCurrency(order.price)}</td>
+                                <td className="px-6 py-3 text-right">{formatCurrency(order.totalAmount)}</td>
+                                <td className="px-6 py-3 text-center space-x-2">
+                                    <button onClick={() => handleApproveOrder(order.id)} className="btn-primary px-3 py-1.5 text-xs">Duyệt</button>
+                                    <button onClick={() => handleRejectOrder(order.id)} className="px-3 py-1.5 rounded-lg border border-danger/30 text-danger text-xs">Từ chối</button>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -179,7 +259,11 @@ const OwnerDashboard = () => {
                         ) : (
                             stocks.map((stock) => (
                                 <tr key={stock.id} className="hover:bg-white/[0.01] transition-colors">
-                                    <td className="px-6 py-4 font-mono font-bold text-primary">{stock.symbol}</td>
+                                    <td className="px-6 py-4 font-mono font-bold">
+                                        <Link to={`/investor/stocks/${stock.id}`} className="text-primary hover:underline">
+                                            {stock.symbol}
+                                        </Link>
+                                    </td>
                                     <td className="px-6 py-4 font-medium text-text-primary">{stock.companyName}</td>
                                     <td className="px-6 py-4 text-text-secondary text-xs">{stock.industry || '--'}</td>
                                     <td className="px-6 py-4 text-right font-mono font-medium text-text-primary">{formatCurrency(stock.currentPrice)}</td>
@@ -200,6 +284,13 @@ const OwnerDashboard = () => {
                                             title="Sửa thông tin"
                                         >
                                             <Edit3 className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(stock)}
+                                            className="p-1.5 rounded-md hover:bg-white/5 text-text-secondary hover:text-danger transition-colors"
+                                            title="Xóa mã"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     </td>
                                 </tr>
@@ -236,6 +327,38 @@ const OwnerDashboard = () => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            <div className="panel overflow-hidden">
+                <div className="px-6 py-4 border-b border-border-subtle">
+                    <h2 className="text-sm font-semibold text-text-primary">Giao dịch mới nhất trên sàn</h2>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead>
+                        <tr className="border-b border-border-subtle text-xs text-text-secondary uppercase">
+                            <th className="px-6 py-3">Mã</th>
+                            <th className="px-6 py-3">Loại</th>
+                            <th className="px-6 py-3 text-right">Số lượng</th>
+                            <th className="px-6 py-3 text-right">Tổng</th>
+                            <th className="px-6 py-3">Thời gian</th>
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-subtle">
+                        {transactions.length === 0 ? (
+                            <tr><td colSpan="5" className="px-6 py-8 text-center text-text-muted">Chưa có giao dịch.</td></tr>
+                        ) : transactions.map((tx) => (
+                            <tr key={tx.id}>
+                                <td className="px-6 py-3 font-mono text-primary">{tx.symbol}</td>
+                                <td className="px-6 py-3">{tx.type}</td>
+                                <td className="px-6 py-3 text-right">{tx.quantity}</td>
+                                <td className="px-6 py-3 text-right">{formatCurrency(tx.totalAmount)}</td>
+                                <td className="px-6 py-3 text-text-secondary">{tx.createdAt ? new Date(tx.createdAt).toLocaleString() : '--'}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <StockFormModal

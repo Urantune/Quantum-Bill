@@ -41,8 +41,38 @@ public class TradingController {
 		return tradingService.transactionHistory(userId);
 	}
 
+	@GetMapping("/transactions")
+	public List<TransactionResponse> allTransactions() {
+		return tradingService.allTransactions();
+	}
+
+	@GetMapping("/orders/pending")
+	public List<TransactionResponse> pendingOrders() {
+		return tradingService.pendingOrders();
+	}
+
+	@PostMapping("/orders/{orderId}/approve")
+	public TradeResponse approveOrder(@PathVariable Long orderId) {
+		return tradingService.approveOrder(orderId);
+	}
+
+	@PostMapping("/orders/{orderId}/reject")
+	public TransactionResponse rejectOrder(@PathVariable Long orderId) {
+		return tradingService.rejectOrder(orderId);
+	}
+
 	@GetMapping("/ranking")
 	public List<RankingResponse> ranking() {
 		return tradingService.ranking();
+	}
+
+	@PostMapping("/topup-sessions")
+	public TopUpSessionResponse createTopUpSession(@Valid @RequestBody TopUpSessionRequest request) {
+		return tradingService.createTopUpSession(request);
+	}
+
+	@PostMapping("/topup-sessions/{token}/complete")
+	public WalletResponse completeTopUp(@PathVariable String token) {
+		return tradingService.completeTopUp(token);
 	}
 }

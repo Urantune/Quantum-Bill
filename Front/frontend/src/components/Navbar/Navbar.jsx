@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, Search, Bell, ChevronDown, LogOut, Settings as SettingsIcon, UserCircle } from 'lucide-react';
 import { MARKET_INDICES } from '@/data/marketData.js';
@@ -14,12 +14,13 @@ import { useAuth } from '@/context/AuthContext';
 const Navbar = ({ onOpenSidebar }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
     const getFriendlyRole = (roles) => {
         if (!roles) return 'Thành viên';
         const roleList = Array.isArray(roles) ? roles : [roles];
-        if (roleList.includes('OWNER') || roleList.includes('ROLE_OWNER')) return 'Sáng lập (Owner)';
-        if (roleList.includes('INVESTOR') || roleList.includes('ROLE_INVESTOR')) return 'Nhà đầu tư (Investor)';
+        if (roleList.includes('OWNER') || roleList.includes('ROLE_OWNER')) return 'Người đầu tư (Owner)';
+        if (roleList.includes('INVESTOR') || roleList.includes('ROLE_INVESTOR')) return 'Công ty niêm yết (Investor)';
         if (roleList.includes('ADMIN') || roleList.includes('ROLE_ADMIN')) return 'Quản trị viên (Admin)';
         return 'Thành viên';
     };
@@ -110,7 +111,7 @@ const Navbar = ({ onOpenSidebar }) => {
                                 </div>
                                 
                                 <Link 
-                                    to="/settings"
+                                    to="/app"
                                     onClick={() => setIsProfileOpen(false)}
                                     className="w-full flex items-center gap-2.5 text-left px-4 py-2 text-sm text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors"
                                 >
@@ -119,7 +120,7 @@ const Navbar = ({ onOpenSidebar }) => {
                                 </Link>
                                 
                                 <Link 
-                                    to="/settings"
+                                    to="/app"
                                     onClick={() => setIsProfileOpen(false)}
                                     className="w-full flex items-center gap-2.5 text-left px-4 py-2 text-sm text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors"
                                 >
@@ -133,6 +134,7 @@ const Navbar = ({ onOpenSidebar }) => {
                                     onClick={() => {
                                         setIsProfileOpen(false);
                                         logout();
+                                        navigate('/auth/login', { replace: true });
                                     }}
                                     className="w-full flex items-center gap-2.5 text-left px-4 py-2.5 text-sm text-danger hover:bg-danger-bg transition-colors"
                                 >

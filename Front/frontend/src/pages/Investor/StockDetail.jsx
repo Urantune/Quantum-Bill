@@ -6,6 +6,7 @@ import investorService
 
 import StockChart
     from "@/components/Investor/StockChart";
+import { formatCurrency } from "@/utils/formatters.js";
 
 export default function StockDetail() {
 
@@ -36,50 +37,31 @@ export default function StockDetail() {
 
     if (error) return <div className="p-6 text-red-500">{error}</div>;
     if (!stock) return <div className="p-6 text-text-secondary">Loading...</div>;
+    const latestHistory = history[0];
+    const directionUp = latestHistory?.direction === "UP";
 
     return (
-        <div className="p-6">
+        <div className="p-6 space-y-6">
 
-            {/* Stock Info */}
-            <div
-                className="
-                bg-bg-base
-                border
-                rounded-xl
-                p-6
-                mb-6
-            "
-            >
-                <h2 className="text-3xl font-bold">
-                    {stock.symbol}
-                </h2>
-
-                <p>
-                    {stock.companyName}
-                </p>
-
-                <p>
-                    Industry: {stock.industry}
-                </p>
-
-                <p>
-                    Current Price:
-                    {stock.currentPrice?.toLocaleString()}
-                </p>
-
+            <div className="panel p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-2">
+                    <h2 className="text-3xl font-bold text-text-primary">{stock.symbol}</h2>
+                    <p className="text-text-secondary mt-1">{stock.companyName}</p>
+                    <p className="text-xs text-text-muted mt-2">Ngành: {stock.industry || "--"} · Trạng thái: {stock.status}</p>
+                </div>
+                <div>
+                    <p className="text-xs text-text-secondary">Giá hiện tại</p>
+                    <p className="text-2xl font-bold text-text-primary">{formatCurrency(stock.currentPrice)}</p>
+                </div>
+                <div>
+                    <p className="text-xs text-text-secondary">Phiên gần nhất</p>
+                    <p className={directionUp ? "text-emerald-500 font-bold" : "text-rose-500 font-bold"}>
+                        {latestHistory ? `${directionUp ? "+" : ""}${Number(latestHistory.changeAmount).toLocaleString()} (${directionUp ? "+" : ""}${latestHistory.changePercent}%)` : "Chưa có dữ liệu"}
+                    </p>
+                </div>
             </div>
 
-            {/* Chart */}
-            <div
-                className="
-                bg-bg-base
-                border
-                rounded-xl
-                p-6
-            "
-            >
-                <StockChart data={history}/>
-            </div>
+            <StockChart data={history} stock={stock}/>
 
             {/* History Table */}
             <div
@@ -92,9 +74,7 @@ export default function StockDetail() {
             "
             >
 
-                <h3 className="text-xl font-semibold mb-4">
-                    Price History
-                </h3>
+                <h3 className="text-xl font-semibold mb-4">Lịch sử giá lưu MongoDB</h3>
 
                 <div className="overflow-auto">
 
@@ -104,19 +84,19 @@ export default function StockDetail() {
 
                         <tr>
                             <th className="p-3 text-left">
-                                Time
+                                Thời gian
                             </th>
 
                             <th className="p-3 text-left">
-                                Old Price
+                                Giá cũ
                             </th>
 
                             <th className="p-3 text-left">
-                                New Price
+                                Giá mới
                             </th>
 
                             <th className="p-3 text-left">
-                                Change
+                                Tăng/giảm
                             </th>
 
                             <th className="p-3 text-left">
@@ -124,7 +104,7 @@ export default function StockDetail() {
                             </th>
 
                             <th className="p-3 text-left">
-                                Direction
+                                Xu hướng
                             </th>
                         </tr>
 

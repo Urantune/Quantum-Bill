@@ -2,6 +2,7 @@ package quantum_bill.stock.owner.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import quantum_bill.stock.common.service.TradingTimeService;
 import quantum_bill.stock.owner.document.StockPriceHistory;
 import quantum_bill.stock.owner.dto.MarketSimulationResponse;
 import quantum_bill.stock.owner.entity.Stock;
@@ -12,23 +13,26 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.SplittableRandom;
 
 @Service
 public class MarketSimulationService {
 	private static final BigDecimal DAILY_LIMIT = new BigDecimal("0.09");
-	private static final LocalTime MARKET_OPEN = LocalTime.of(10, 0);
-	private static final LocalTime MARKET_CLOSE = LocalTime.of(18, 0);
 
 	private final StockRepository stockRepository;
 	private final StockPriceHistoryRepository historyRepository;
+	private final TradingTimeService tradingTimeService;
 	private final SplittableRandom random = new SplittableRandom();
 
-	public MarketSimulationService(StockRepository stockRepository, StockPriceHistoryRepository historyRepository) {
+	public MarketSimulationService(
+			StockRepository stockRepository,
+			StockPriceHistoryRepository historyRepository,
+			TradingTimeService tradingTimeService
+	) {
 		this.stockRepository = stockRepository;
 		this.historyRepository = historyRepository;
+		this.tradingTimeService = tradingTimeService;
 	}
 
 	@Transactional
@@ -42,12 +46,15 @@ public class MarketSimulationService {
 	}
 
 	public List<StockPriceHistory> history(Long stockId) {
-		return historyRepository.findByStockIdOrderByRecordedAtDesc(stockId);
+		try {
+			return historyRepository.findByStockIdOrderByRecordedAtDesc(stockId);
+		} catch (RuntimeException ex) {
+			return List.of();
+		}
 	}
 
 	public boolean isMarketOpen() {
-		LocalTime now = LocalTime.now();
-		return !now.isBefore(MARKET_OPEN) && !now.isAfter(MARKET_CLOSE);
+		return tradingTimeService.isOpen();
 	}
 
 	private MarketSimulationResponse simulateStock(Stock stock) {
@@ -79,11 +86,15 @@ public class MarketSimulationService {
 
 	private BigDecimal referencePrice(Stock stock, BigDecimal fallback) {
 		LocalDate today = LocalDate.now();
-		return historyRepository.findByStockIdOrderByRecordedAtDesc(stock.getId()).stream()
-				.filter(history -> history.getRecordedAt() != null && history.getRecordedAt().toLocalDate().isBefore(today))
-				.findFirst()
-				.map(StockPriceHistory::getNewPrice)
-				.orElse(fallback);
+		try {
+			return historyRepository.findByStockIdOrderByRecordedAtDesc(stock.getId()).stream()
+					.filter(history -> history.getRecordedAt() != null && history.getRecordedAt().toLocalDate().isBefore(today))
+					.findFirst()
+					.map(StockPriceHistory::getNewPrice)
+					.orElse(fallback);
+		} catch (RuntimeException ex) {
+			return fallback;
+		}
 	}
 
 	private BigDecimal nextPriceMove() {
@@ -112,7 +123,11 @@ public class MarketSimulationService {
 		history.setDirection(direction);
 		history.setChangeReason("RANDOM_MARKET_TICK");
 		history.setRecordedAt(LocalDateTime.now());
-		historyRepository.save(history);
+		try {
+			historyRepository.save(history);
+		} catch (RuntimeException ignored) {
+			// Keep MySQL price simulation running even when MongoDB Atlas is temporarily unreachable.
+		}
 	}
 
 	private String direction(BigDecimal changeAmount) {
@@ -122,8 +137,6 @@ public class MarketSimulationService {
 	}
 
 	private void assertTradingHours() {
-		if (!isMarketOpen()) {
-			throw new IllegalStateException("Market simulation is only allowed from 10:00 to 18:00");
-		}
+		tradingTimeService.assertOpen("Market simulation");
 	}
 }

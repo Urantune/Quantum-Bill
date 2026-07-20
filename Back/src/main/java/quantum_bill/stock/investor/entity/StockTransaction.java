@@ -47,6 +47,12 @@ public class StockTransaction {
 	@Column(name = "total_amount", nullable = false, precision = 19, scale = 2)
 	private BigDecimal totalAmount;
 
+	@Column(length = 20)
+	private String status;
+
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
+
+	@Column(name = "approved_at")
+	private LocalDateTime approvedAt;
 }

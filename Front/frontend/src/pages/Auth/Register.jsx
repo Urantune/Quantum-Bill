@@ -13,7 +13,7 @@ const Register = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [role, setRole] = useState('INVESTOR'); // Mặc định là INVESTOR (Nhà đầu tư)
+    const [role, setRole] = useState('OWNER');
 
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -154,8 +154,8 @@ const Register = () => {
                             className="input-base w-full pl-11 text-sm bg-bg-surface border-border-subtle appearance-none cursor-pointer"
                             required
                         >
-                            <option value="INVESTOR">INVESTOR (Nhà đầu tư giả lập)</option>
-                            <option value="OWNER">OWNER (Người sáng lập doanh nghiệp)</option>
+                            <option value="OWNER">OWNER (Người đầu tư)</option>
+                            <option value="INVESTOR">INVESTOR (Công ty niêm yết)</option>
                         </select>
                         <div className="absolute right-3.5 top-3.5 pointer-events-none text-text-secondary">
                             ▼

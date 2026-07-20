@@ -89,13 +89,13 @@ public class AuthService {
         user.setEmail(request.email());
         user.setUsername(request.username());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setStatus(roleName.equals("OWNER") ? "PENDING" : "ACTIVE");
+        user.setStatus(roleName.equals("INVESTOR") ? "PENDING" : "ACTIVE");
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
         User saved = userRepository.save(user);
 
-        if (roleName.equals("INVESTOR")) {
-            assignRole(saved, "INVESTOR");
+        if (roleName.equals("OWNER")) {
+            assignRole(saved, "OWNER");
             createWallet(saved, now);
         }
 
@@ -134,7 +134,7 @@ public class AuthService {
     }
 
     public String generateToken(User user) {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())

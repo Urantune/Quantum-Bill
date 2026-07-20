@@ -37,11 +37,18 @@ const ICON_MAP = {
  */
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     const { user } = useAuth();
-    const userRoles = user?.roles || [];
+    const storedRoles = user?.roles || [];
+    const userRoles = user?.username === 'admin'
+        ? ['ADMIN']
+        : storedRoles.includes('OWNER')
+            ? ['OWNER']
+            : storedRoles.includes('INVESTOR')
+                ? ['INVESTOR']
+                : storedRoles;
     const visibleItems = NAV_ITEMS.filter((item) => {
         const roleAllowed = !item.roles || item.roles.some((role) => userRoles.includes(role));
         const statusAllowed = !item.statuses || item.statuses.includes(user?.status);
-        return roleAllowed || statusAllowed;
+        return roleAllowed && statusAllowed;
     });
 
     const navContent = (

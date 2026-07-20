@@ -10,6 +10,7 @@ const AdminLayout = () => {
                     <NavLink to="/admin/users" className="text-sm">Người dùng</NavLink>
                     <NavLink to="/admin/stocks" className="text-sm">Cổ phiếu</NavLink>
                     <NavLink to="/admin/simulation" className="text-sm">Simulation</NavLink>
+                    <NavLink to="/admin/settime" className="text-sm">Giờ giao dịch</NavLink>
                 </nav>
             </div>
 

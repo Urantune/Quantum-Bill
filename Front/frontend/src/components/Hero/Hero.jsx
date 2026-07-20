@@ -54,11 +54,11 @@ const Hero = () => {
                     transition={{ duration: 0.7, ease: 'easeOut', delay: 0.3 }}
                     className="flex flex-col sm:flex-row items-center gap-4 mt-8"
                 >
-                    <Link to="/markets" className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">
+                    <Link to="/app" className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">
                         Bắt đầu giao dịch
                         <ArrowRight className="w-4 h-4" />
                     </Link>
-                    <Link to="/markets" className="btn-secondary flex items-center gap-2 w-full sm:w-auto justify-center">
+                    <Link to="/owner/stocks" className="btn-secondary flex items-center gap-2 w-full sm:w-auto justify-center">
                         <Compass className="w-4 h-4" />
                         Khám phá thị trường
                     </Link>

@@ -14,14 +14,14 @@ const adminApi = {
 
   // Simulation (use MarketController)
   runRandomSimulation: (force = true) => apiClient.post('/api/market/simulate', null, { params: { force } }),
-  getLastSimulationResult: () => apiClient.get('/api/market/stocks/last-result'),
 
   // Wallet adjust
   adjustWallet: (userId, amount, reason = 'Admin topup') =>
     apiClient.post('/api/admin/wallets/adjust', { userId, amount, reason }),
 
   // Ranking
-  getInvestorRanking: () => apiClient.get('/api/admin/investors/ranking'),
+  getInvestorRanking: () => apiClient.get('/api/trading/ranking'),
+  getTransactions: () => apiClient.get('/api/trading/transactions'),
 };
 
 export default adminApi;

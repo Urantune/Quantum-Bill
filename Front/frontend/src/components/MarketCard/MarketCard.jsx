@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatPercent, formatChange } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
@@ -10,7 +11,7 @@ import { cn } from '@/utils/cn';
 const MarketCard = ({ index, delay = 0 }) => {
     const { name, fullName, value, change, changePercent, volume, isUp } = index;
 
-    return (
+    const content = (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -52,6 +53,8 @@ const MarketCard = ({ index, delay = 0 }) => {
             </div>
         </motion.div>
     );
+
+    return index.path ? <Link to={index.path}>{content}</Link> : content;
 };
 
 export default MarketCard;

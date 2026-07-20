@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import investorService from "@/services/investorService";
 import { getCurrentUserId } from "@/services/session.js";
 import { isTradingOpen, tradingHoursMessage } from "@/utils/tradingHours.js";
+import timeService from "@/services/timeService.js";
 
 const FEE_RATE = 0.036;
 
@@ -12,6 +13,7 @@ export default function SellStock() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [tradingTime, setTradingTime] = useState(null);
 
     const loadPortfolio = () => {
         investorService.getPortfolio()
@@ -21,6 +23,9 @@ export default function SellStock() {
 
     useEffect(() => {
         loadPortfolio();
+        timeService.getTradingTime()
+            .then(setTradingTime)
+            .catch(() => setTradingTime(null));
     }, []);
 
     const holdings = portfolio?.holdings || [];
@@ -55,8 +60,8 @@ export default function SellStock() {
             return;
         }
 
-        if (!isTradingOpen()) {
-            setError(tradingHoursMessage());
+        if (!isTradingOpen(new Date(), tradingTime)) {
+            setError(tradingHoursMessage(tradingTime));
             return;
         }
 
@@ -67,7 +72,7 @@ export default function SellStock() {
                 stockId: selectedHolding.stockId,
                 quantity: Number(quantity),
             });
-            setMessage(`Bán thành công ${response.data.quantity} ${response.data.symbol}. Số dư mới ${Number(response.data.walletBalance).toLocaleString()} VND.`);
+            setMessage(`Đã đặt lệnh bán ${response.data.quantity} ${response.data.symbol}. Lệnh đang chờ tài khoản INVESTOR duyệt, danh mục chưa thay đổi.`);
             setQuantity("");
             loadPortfolio();
         } catch (err) {
@@ -123,10 +128,10 @@ export default function SellStock() {
                     </div>
 
                     <p className="text-xs text-text-secondary">
-                        Giao dịch mở từ 10:00 đến 18:00 theo giờ server/local.
+                        {tradingHoursMessage(tradingTime)}
                     </p>
 
-                    <button type="submit" disabled={loading || holdings.length === 0 || !isTradingOpen()} className="px-6 py-2 rounded-lg bg-primary text-white disabled:opacity-50">
+                    <button type="submit" disabled={loading || holdings.length === 0 || !isTradingOpen(new Date(), tradingTime)} className="px-6 py-2 rounded-lg bg-primary text-white disabled:opacity-50">
                         {loading ? "Đang xử lý..." : "Bán"}
                     </button>
                 </form>

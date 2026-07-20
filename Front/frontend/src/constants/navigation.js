@@ -2,20 +2,20 @@
 // Tên icon tương ứng với bộ Lucide React (import động trong component Sidebar)
 
 export const NAV_ITEMS = [
-    {id: 'admin-dashboard', label: 'Dashboard Quản trị', path: '/admin', icon: 'LayoutDashboard', roles: ['ADMIN', 'ROLE_ADMIN']},
-    {id: 'admin-users', label: 'Quản lý Người dùng', path: '/admin/users', icon: 'Settings', roles: ['ADMIN', 'ROLE_ADMIN']},
-    {id: 'admin-stocks', label: 'Phê duyệt Cổ phiếu', path: '/admin/stocks', icon: 'Building', roles: ['ADMIN', 'ROLE_ADMIN']},
-    {id: 'admin-simulation', label: 'Giả lập Thị trường', path: '/admin/simulation', icon: 'TrendingUp', roles: ['ADMIN', 'ROLE_ADMIN']},
-    {id: 'admin-wallet', label: 'Quản lý Nạp rút', path: '/admin/wallet', icon: 'Wallet', roles: ['ADMIN', 'ROLE_ADMIN']},
-    {id: 'investor-dashboard', label: 'Tổng quan investor', path: '/investor', icon: 'LayoutDashboard', roles: ['INVESTOR']},
-    {id: 'investor-wallet', label: 'Ví tiền', path: '/investor/wallet', icon: 'Wallet', roles: ['INVESTOR']},
-    {id: 'investor-stocks', label: 'Bảng giá cổ phiếu', path: '/investor/stocks', icon: 'TrendingUp', roles: ['INVESTOR']},
-    {id: 'investor-buy', label: 'Mua cổ phiếu', path: '/investor/buy', icon: 'CreditCard', roles: ['INVESTOR']},
-    {id: 'investor-sell', label: 'Bán cổ phiếu', path: '/investor/sell', icon: 'CreditCard', roles: ['INVESTOR']},
-    {id: 'investor-portfolio', label: 'Danh mục', path: '/investor/portfolio', icon: 'BarChart3', roles: ['INVESTOR']},
-    {id: 'investor-transactions', label: 'Lịch sử giao dịch', path: '/investor/transactions', icon: 'LayoutDashboard', roles: ['INVESTOR']},
-    {id: 'investor-ranking', label: 'Xếp hạng', path: '/investor/ranking', icon: 'Star', roles: ['INVESTOR', 'ADMIN', 'ROLE_ADMIN']},
-    {id: 'owner-dashboard', label: 'Doanh nghiệp', path: '/owner', icon: 'Building', roles: ['OWNER'], statuses: ['PENDING']}
+    {id: 'admin-dashboard', label: 'Tổng quan admin', path: '/admin', icon: 'LayoutDashboard', roles: ['ADMIN']},
+    {id: 'admin-users', label: 'Quản lý user', path: '/admin/users', icon: 'Settings', roles: ['ADMIN']},
+    {id: 'admin-stocks', label: 'Duyệt cổ phiếu', path: '/admin/stocks', icon: 'Building', roles: ['ADMIN']},
+    {id: 'admin-simulation', label: 'Simulation', path: '/admin/simulation', icon: 'BarChart3', roles: ['ADMIN']},
+    {id: 'company-dashboard', label: 'Doanh nghiệp', path: '/investor', icon: 'Building', roles: ['INVESTOR'], statuses: ['PENDING']},
+    {id: 'owner-dashboard', label: 'Tổng quan đầu tư', path: '/owner', icon: 'LayoutDashboard', roles: ['OWNER']},
+    {id: 'owner-wallet', label: 'Ví tiền', path: '/owner/wallet', icon: 'Wallet', roles: ['OWNER']},
+    {id: 'owner-stocks', label: 'Bảng giá cổ phiếu', path: '/owner/stocks', icon: 'TrendingUp', roles: ['OWNER']},
+    {id: 'owner-buy', label: 'Mua cổ phiếu', path: '/owner/buy', icon: 'CreditCard', roles: ['OWNER']},
+    {id: 'owner-sell', label: 'Bán cổ phiếu', path: '/owner/sell', icon: 'CreditCard', roles: ['OWNER']},
+    {id: 'owner-portfolio', label: 'Danh mục', path: '/owner/portfolio', icon: 'BarChart3', roles: ['OWNER']},
+    {id: 'owner-transactions', label: 'Lịch sử giao dịch', path: '/owner/transactions', icon: 'LayoutDashboard', roles: ['OWNER']},
+    {id: 'owner-ranking', label: 'Xếp hạng', path: '/owner/ranking', icon: 'Star', roles: ['OWNER']},
+    {id: 'settime', label: 'Giờ giao dịch', path: '/admin/settime', icon: 'Settings', roles: ['ADMIN']}
 ];
 
 export const FOOTER_LINKS = {
