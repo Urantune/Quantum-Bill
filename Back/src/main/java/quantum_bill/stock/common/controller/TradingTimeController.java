@@ -7,7 +7,7 @@ import quantum_bill.stock.common.dto.TradingTimeResponse;
 import quantum_bill.stock.common.service.TradingTimeService;
 
 @RestController
-@RequestMapping("/settime")
+@RequestMapping("/api/settime")
 public class TradingTimeController {
 	private final TradingTimeService tradingTimeService;
 
