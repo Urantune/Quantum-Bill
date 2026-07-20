@@ -28,7 +28,7 @@ const Login = () => {
         const result = await login(username, password);
         
         if (result.success) {
-            navigate('/', { replace: true });
+            navigate('/app', { replace: true });
         } else {
             setError(result.error || 'Tên đăng nhập hoặc mật khẩu không chính xác.');
             setIsSubmitting(false);

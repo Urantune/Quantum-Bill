@@ -3,6 +3,7 @@ import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import PrivateRoute from '@/components/common/PrivateRoute';
 import { useAuth } from '@/context/AuthContext';
+import { getRoleHomePath } from '@/utils/roleRedirect.js';
 import InvestorDashboard from '@/pages/Investor/Dashboard';
 import Wallet from '@/pages/Investor/Wallet';
 import StockList from '@/pages/Investor/StockList';
@@ -47,10 +48,15 @@ const AppRoutes = () => {
 
             {/* Các tuyến đường sử dụng MainLayout */}
             <Route element={<MainLayout/>}>
-                <Route path="/" element={<RoleHome/>}/>
+                <Route path="/" element={<Dashboard/>}/>
+                <Route path="/markets" element={<Markets/>}/>
+                <Route path="/news" element={<News/>}/>
+                <Route path="/analytics" element={<Analytics/>}/>
+                <Route path="/pricing" element={<PricingPage/>}/>
 
                 {/* Các tuyến đường ứng dụng được bảo vệ */}
                 <Route element={<PrivateRoute/>}>
+                    <Route path="/app" element={<RoleHome/>}/>
                     <Route path="/owner" element={<OwnerDashboard/>}/>
 
                     <Route path="/investor" element={<InvestorDashboard/>}/>
@@ -100,19 +106,7 @@ const RoleHome = () => {
         return <Navigate to="/auth/login" replace />;
     }
 
-    if (user?.status === 'PENDING') {
-        return <Navigate to="/owner" replace />;
-    }
-
-    if (user?.roles?.includes('OWNER')) {
-        return <Navigate to="/owner" replace />;
-    }
-
-    if (user?.roles?.includes('INVESTOR')) {
-        return <Navigate to="/investor" replace />;
-    }
-
-    return <Navigate to="/investor/ranking" replace />;
+    return <Navigate to={getRoleHomePath(user)} replace />;
 };
 
 export default AppRoutes;

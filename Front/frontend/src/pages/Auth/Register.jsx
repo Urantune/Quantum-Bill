@@ -43,7 +43,7 @@ const Register = () => {
         const result = await register(fullName, email, username, password, role);
 
         if (result.success) {
-            navigate('/', { replace: true });
+            navigate('/app', { replace: true });
         } else {
             setError(result.error || 'Đăng ký tài khoản thất bại.');
             setIsSubmitting(false);
