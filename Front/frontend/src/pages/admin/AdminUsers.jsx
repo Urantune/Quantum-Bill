@@ -53,7 +53,7 @@ const Users = () => {
                 <td className="py-2">{(u.roles || []).join(', ')}</td>
                 <td className="py-2">{(u.status || '').toUpperCase() === 'LOCKED' ? 'Đã khóa' : (u.status || '—')}</td>
                 <td className="py-2 space-x-2">
-                  {!(u.roles || []).includes('INVESTOR') && (
+                  {(u.status || '').toUpperCase() === 'PENDING' && !(u.roles || []).includes('INVESTOR') && (
                     <button onClick={() => handleApprove(u.id)} className="btn btn-sm">Duyệt công ty</button>
                   )}
                   <button onClick={() => handleToggleLock(u.id, u.status)} className="btn btn-sm">

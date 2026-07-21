@@ -1,72 +1,70 @@
-import apiClient from './api';
-import { getCurrentUserId } from '@/services/session.js';
+import axiosClient from "@/services/api.js";
+import { getCurrentUserId } from "@/services/session.js";
 
-function normalizeList(data) {
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.content)) return data.content;
-    return [];
+function requireUserId(userId = getCurrentUserId()) {
+    if (!userId) {
+        throw new Error("Bạn cần đăng nhập tài khoản OWNER trước khi dùng chức năng giao dịch.");
+    }
+    return userId;
 }
 
-export const ownerService = {
-
-    getMyStocks: () => {
-        return apiClient.get('/api/stocks')
-            .then(response => normalizeList(response.data));
+const ownerService = {
+    getWallet(userId) {
+        return axiosClient.get(`/api/trading/wallet/${requireUserId(userId)}`);
     },
 
-    getStockHistory: (stockId) => {
-        return apiClient.get(`/api/market/stocks/${stockId}/history`)
-            .then(response => response.data);
+    createTopUpSession(amount, userId) {
+        return axiosClient.post('/api/trading/topup-sessions', {
+            userId: requireUserId(userId),
+            amount,
+        });
     },
 
-    submitStock: (stockData) => {
-        return apiClient.post('/api/stocks/submit', {
-            ...stockData,
-            createdById: stockData.createdById || getCurrentUserId(),
-        })
-            .then(
-                response => response.data,
-                error => {
-                    return Promise.reject(error);
-                }
-            );
+    completeTopUp(token) {
+        return axiosClient.post(`/api/trading/topup-sessions/${token}/complete`);
     },
 
-    updateStock: (id, stockData) => {
-        return apiClient.put(`/api/stocks/${id}`, stockData)
-            .then(
-                response => response.data,
-                error => { return Promise.reject(error); }
-            );
+    getPortfolio(userId) {
+        return axiosClient.get(`/api/trading/portfolio/${requireUserId(userId)}`);
     },
 
-    deleteStock: (id) => {
-        return apiClient.delete(`/api/stocks/${id}`)
-            .then(response => response.data);
+    getTransactions(userId) {
+        return axiosClient.get(`/api/trading/transactions/${requireUserId(userId)}`);
     },
 
-    simulateMarket: (force = true) => {
-        return apiClient.post('/api/market/simulate', null, { params: { force } })
-            .then(response => response.data);
+    getRanking() {
+        return axiosClient.get(`/api/trading/ranking`);
     },
 
-    getTransactions: () => {
-        return apiClient.get('/api/trading/transactions')
-            .then(response => response.data);
+    buyStock(payload) {
+        return axiosClient.post(`/api/trading/buy`, payload);
     },
 
-    getPendingOrders: () => {
-        return apiClient.get('/api/trading/orders/pending')
-            .then(response => response.data);
+    sellStock(payload) {
+        return axiosClient.post(`/api/trading/sell`, payload);
     },
 
-    approveOrder: (orderId) => {
-        return apiClient.post(`/api/trading/orders/${orderId}/approve`)
-            .then(response => response.data);
+    getStocks() {
+        return axiosClient.get(`/api/stocks/active`);
     },
 
-    rejectOrder: (orderId) => {
-        return apiClient.post(`/api/trading/orders/${orderId}/reject`)
-            .then(response => response.data);
+    searchStocks(keyword) {
+        return axiosClient.get(
+            `/api/stocks/active?q=${keyword}`
+        );
+    },
+
+    getStockById(id) {
+        return axiosClient.get(
+            `/api/stocks/${id}`
+        );
+    },
+
+    getStockHistory(id) {
+        return axiosClient.get(
+            `/api/market/stocks/${id}/history`
+        );
     },
 };
+
+export default ownerService;

@@ -9,6 +9,7 @@ import quantum_bill.stock.auth.dto.response.ApiResponse;
 import quantum_bill.stock.auth.dto.response.AuthenticationResponse;
 import quantum_bill.stock.auth.dto.response.IntrospectResponse;
 import quantum_bill.stock.auth.dto.response.UserResponse;
+import quantum_bill.stock.auth.dto.response.CompanyListingRegistrationResponse;
 import quantum_bill.stock.auth.service.AuthService;
 
 import java.text.ParseException;
@@ -39,6 +40,12 @@ public class AuthController {
 	@PostMapping("/register")
 	public UserResponse register(@Valid @RequestBody RegisterRequest request) {
 		return authService.register(request);
+	}
+
+	@PostMapping("/register/company-listing")
+	public CompanyListingRegistrationResponse registerCompanyListing(
+			@Valid @RequestBody CompanyListingRegistrationRequest request) {
+		return authService.registerCompanyListing(request);
 	}
 
     @PostMapping("/login")

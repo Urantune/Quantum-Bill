@@ -5,7 +5,7 @@ import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import { useFetch } from '@/hooks/useFetch';
 import { BarChart2 } from 'lucide-react';
-import investorService from '@/services/investorService.js';
+import ownerService from '@/services/ownerService.js';
 
 /**
  * Section "Market Overview" - hiển thị danh sách card chỉ số thị trường
@@ -14,7 +14,7 @@ import investorService from '@/services/investorService.js';
 const MarketOverview = () => {
     const { data: indices, isLoading, error, refetch } = useFetch(
         async () => {
-            const response = await investorService.getStocks();
+            const response = await ownerService.getStocks();
             return (Array.isArray(response.data) ? response.data : []).slice(0, 3).map((stock, index) => {
                 const seed = Number(stock.id || index + 1);
                 const changePercent = ((seed % 7) - 3) / 100;

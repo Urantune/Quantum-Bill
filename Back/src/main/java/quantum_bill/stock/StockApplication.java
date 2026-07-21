@@ -10,11 +10,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {
 		"quantum_bill.stock.admin.repository",
-		"quantum_bill.stock.investor.repository",
-		"quantum_bill.stock.owner.repository"
+		"quantum_bill.stock.owner.repository",
+		"quantum_bill.stock.investor.repository"
 })
 @EnableMongoRepositories(basePackages = {
-		"quantum_bill.stock.owner.mongo",
+		"quantum_bill.stock.investor.mongo",
 		"quantum_bill.stock.common.repository"
 })
 public class StockApplication {

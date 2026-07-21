@@ -20,15 +20,21 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        const registrationUsername = username.trim();
+
         // Validation cơ bản
-        if (!fullName.trim() || !email.trim() || !username.trim() || !password.trim()) {
+        if (!fullName.trim() || !email.trim() || !registrationUsername || !password.trim()) {
             setError('Vui lòng điền đầy đủ tất cả các trường.');
             return;
         }
 
         if (password !== confirmPassword) {
             setError('Mật khẩu nhập lại không khớp.');
+            return;
+        }
+
+        if (!/^[a-z0-9_]{2,30}$/.test(registrationUsername)) {
+            setError('Tên đăng nhập chỉ gồm chữ thường không dấu, số hoặc dấu gạch dưới, từ 2 đến 30 ký tự.');
             return;
         }
 
@@ -40,10 +46,17 @@ const Register = () => {
         setError('');
         setIsSubmitting(true);
 
-        const result = await register(fullName, email, username, password, role);
+        const result = await register(fullName.trim(), email.trim(), registrationUsername, password, role);
 
         if (result.success) {
-            navigate('/app', { replace: true });
+            if (result.pending) {
+                navigate('/auth/login', {
+                    replace: true,
+                    state: { message: 'Đăng ký công ty thành công. Vui lòng chờ Admin duyệt trước khi đăng nhập.' },
+                });
+            } else {
+                navigate('/app', { replace: true });
+            }
         } else {
             setError(result.error || 'Đăng ký tài khoản thất bại.');
             setIsSubmitting(false);
@@ -82,14 +95,14 @@ const Register = () => {
                 {/* Họ tên đầy đủ */}
                 <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-text-secondary" htmlFor="fullName">
-                        Họ và tên
+                        {role === 'INVESTOR' ? 'Tên công ty' : 'Họ và tên'}
                     </label>
                     <div className="relative">
                         <User className="absolute left-3.5 top-3.5 w-4 h-4 text-text-muted" />
                         <input
                             id="fullName"
                             type="text"
-                            placeholder="Nguyễn Văn A"
+                            placeholder={role === 'INVESTOR' ? 'Công ty Cổ phần ABC' : 'Nguyễn Văn A'}
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
                             disabled={isSubmitting}
@@ -129,7 +142,7 @@ const Register = () => {
                         <input
                             id="username"
                             type="text"
-                            placeholder="viet_tuan_123"
+                            placeholder={role === 'INVESTOR' ? 'Ví dụ: fpt' : 'viet_tuan_123'}
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             disabled={isSubmitting}

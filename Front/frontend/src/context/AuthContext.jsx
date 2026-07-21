@@ -132,8 +132,11 @@ export const AuthProvider = ({ children }) => {
             if (!responseUser) {
                 throw new Error('Backend không trả thông tin đăng ký hợp lệ.');
             }
+            if ((responseUser.status || '').toUpperCase() === 'PENDING') {
+                return { success: true, user: responseUser, pending: true };
+            }
             const registeredUser = persistSession(responseUser, responseToken);
-            return { success: true, user: registeredUser };
+            return { success: true, user: registeredUser, pending: false };
         } catch (error) {
             return {
                 success: false,

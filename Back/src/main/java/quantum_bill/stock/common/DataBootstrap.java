@@ -10,11 +10,16 @@ import quantum_bill.stock.admin.entity.UserRole;
 import quantum_bill.stock.admin.repository.RoleRepository;
 import quantum_bill.stock.admin.repository.UserRepository;
 import quantum_bill.stock.admin.repository.UserRoleRepository;
-import quantum_bill.stock.investor.entity.Wallet;
-import quantum_bill.stock.investor.repository.WalletRepository;
+import quantum_bill.stock.owner.entity.Wallet;
+import quantum_bill.stock.owner.repository.WalletRepository;
+import quantum_bill.stock.investor.entity.Stock;
+import quantum_bill.stock.investor.repository.StockRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 @Component
 public class DataBootstrap implements CommandLineRunner {
@@ -23,19 +28,22 @@ public class DataBootstrap implements CommandLineRunner {
 	private final UserRoleRepository userRoleRepository;
 	private final WalletRepository walletRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final StockRepository stockRepository;
 
 	public DataBootstrap(
 			RoleRepository roleRepository,
 			UserRepository userRepository,
 			UserRoleRepository userRoleRepository,
 			WalletRepository walletRepository,
-			PasswordEncoder passwordEncoder
+			PasswordEncoder passwordEncoder,
+			StockRepository stockRepository
 	) {
 		this.roleRepository = roleRepository;
 		this.userRepository = userRepository;
 		this.userRoleRepository = userRoleRepository;
 		this.walletRepository = walletRepository;
 		this.passwordEncoder = passwordEncoder;
+		this.stockRepository = stockRepository;
 	}
 
 	@Override
@@ -46,7 +54,45 @@ public class DataBootstrap implements CommandLineRunner {
 		ensureRole("INVESTOR", "Listed company owner");
 		ensureAdmin();
 		ensureSampleUser("hehe", "hehe@quantumbill.local", "Người đầu tư mẫu", "OWNER", "ACTIVE", true);
-		ensureSampleUser("tt", "tt@quantumbill.local", "Công ty niêm yết mẫu", "INVESTOR", "ACTIVE", false);
+		ensureCompanyAccounts();
+	}
+
+	private void ensureCompanyAccounts() {
+		Map<String, User> accountsByCompany = new HashMap<>();
+		for (Stock stock : stockRepository.findAll()) {
+			String companyKey = stock.getCompanyName().trim().toLowerCase(Locale.ROOT);
+			User company = accountsByCompany.get(companyKey);
+			if (company == null) {
+				String username = stock.getSymbol().trim().toLowerCase(Locale.ROOT);
+				company = userRepository.findByUsername(username)
+						.orElseGet(() -> stock.getCreatedBy() != null ? stock.getCreatedBy() : createCompanyUser(stock));
+				company.setUsername(username);
+				company.setFullName(stock.getCompanyName().trim());
+				company.setStatus("ACTIVE");
+				company.setPasswordHash(passwordEncoder.encode("123"));
+				company.setUpdatedAt(LocalDateTime.now());
+				company = userRepository.save(company);
+				removeUnexpectedRoles(company, "INVESTOR");
+				ensureUserRole(company, "INVESTOR");
+				accountsByCompany.put(companyKey, company);
+			}
+			stock.setCreatedBy(company);
+			stock.setUpdatedAt(LocalDateTime.now());
+			stockRepository.save(stock);
+		}
+	}
+
+	private User createCompanyUser(Stock stock) {
+				LocalDateTime now = LocalDateTime.now();
+				User user = new User();
+				user.setFullName(stock.getCompanyName());
+				user.setEmail("company-" + stock.getId() + "@quantumbill.local");
+				user.setUsername(stock.getSymbol().trim().toLowerCase(Locale.ROOT));
+				user.setPasswordHash(passwordEncoder.encode("123"));
+				user.setStatus("ACTIVE");
+				user.setCreatedAt(now);
+				user.setUpdatedAt(now);
+				return userRepository.save(user);
 	}
 
 	private void ensureRole(String name, String description) {

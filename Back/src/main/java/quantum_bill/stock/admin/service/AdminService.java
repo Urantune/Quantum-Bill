@@ -8,15 +8,15 @@ import quantum_bill.stock.admin.repository.UserRepository;
 import quantum_bill.stock.auth.dto.response.UserResponse;
 import quantum_bill.stock.auth.service.AuthService;
 import quantum_bill.stock.common.ApiMessage;
-import quantum_bill.stock.investor.entity.Wallet;
-import quantum_bill.stock.investor.entity.WalletTransaction;
-import quantum_bill.stock.investor.dto.WalletResponse;
-import quantum_bill.stock.investor.repository.WalletRepository;
-import quantum_bill.stock.investor.repository.WalletTransactionRepository;
-import quantum_bill.stock.owner.entity.Stock;
-import quantum_bill.stock.owner.exception.ResourceNotFoundException;
-import quantum_bill.stock.owner.dto.response.StockResponseDTO;
-import quantum_bill.stock.owner.repository.StockRepository;
+import quantum_bill.stock.owner.entity.Wallet;
+import quantum_bill.stock.owner.entity.WalletTransaction;
+import quantum_bill.stock.owner.dto.WalletResponse;
+import quantum_bill.stock.owner.repository.WalletRepository;
+import quantum_bill.stock.owner.repository.WalletTransactionRepository;
+import quantum_bill.stock.investor.entity.Stock;
+import quantum_bill.stock.investor.exception.ResourceNotFoundException;
+import quantum_bill.stock.investor.dto.response.StockResponseDTO;
+import quantum_bill.stock.investor.repository.StockRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,6 +57,11 @@ public class AdminService {
 		user.setUpdatedAt(LocalDateTime.now());
 		User saved = userRepository.save(user);
 		authService.assignRole(saved, "INVESTOR");
+		stockRepository.findFirstByCompanyNameIgnoreCase(saved.getFullName()).ifPresent(stock -> {
+			stock.setCreatedBy(saved);
+			stock.setUpdatedAt(LocalDateTime.now());
+			stockRepository.save(stock);
+		});
 		return authService.toResponse(saved);
 	}
 

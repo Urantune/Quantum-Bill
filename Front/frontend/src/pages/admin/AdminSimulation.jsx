@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, 
@@ -21,11 +21,10 @@ const Simulation = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const runSimulation = async () => {
+  const runSimulation = useCallback(async () => {
     try {
       setRunning(true);
       setError(null);
-      setResult(null);
       const res = await adminApi.runRandomSimulation(true);
       const data = res.data || res || [];
       setResult(Array.isArray(data) ? data : [data]);
@@ -35,7 +34,14 @@ const Simulation = () => {
     } finally {
       setRunning(false);
     }
-  };
+  }, []);
+
+  // Tự động chạy simulation khi vào trang, lặp mỗi 15 giây
+  useEffect(() => {
+    runSimulation();
+    const interval = setInterval(runSimulation, 15000);
+    return () => clearInterval(interval);
+  }, [runSimulation]);
 
   const formatAmount = (val) => {
     if (val == null) return '—';

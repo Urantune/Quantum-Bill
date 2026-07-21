@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { User, Lock, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import OAuthButtons from '@/components/Auth/OAuthButtons';
 
 const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -60,6 +62,12 @@ const Login = () => {
                     <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                     <span>{error}</span>
                 </motion.div>
+            )}
+
+            {location.state?.message && !error && (
+                <div className="p-3 bg-success/10 border border-success/20 rounded-lg text-success text-sm">
+                    {location.state.message}
+                </div>
             )}
 
             {/* Form Đăng nhập */}
@@ -132,6 +140,8 @@ const Login = () => {
                     )}
                 </button>
             </form>
+
+            <OAuthButtons />
 
             {/* Đăng ký tài khoản mới */}
             <div className="text-center text-sm text-text-secondary pt-2">

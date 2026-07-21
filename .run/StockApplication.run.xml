@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="StockApplication (no build)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <module name="stock" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="quantum_bill.stock.StockApplication" />
+    <method v="2" />
+  </configuration>
+</component>

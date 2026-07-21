@@ -5,19 +5,20 @@ import PrivateRoute from '@/components/common/PrivateRoute';
 import RoleRoute from '@/components/common/RoleRoute';
 import { useAuth } from '@/context/AuthContext';
 import { getRoleHomePath } from '@/utils/roleRedirect.js';
-import InvestorDashboard from '@/pages/Investor/Dashboard';
-import Wallet from '@/pages/Investor/Wallet';
-import StockList from '@/pages/Investor/StockList';
-import InvestorPortfolio from '@/pages/Investor/Portfolio';
-import TransactionHistory from '@/pages/Investor/TransactionHistory';
-import Ranking from '@/pages/Investor/Ranking';
-import StockDetail from "@/pages/Investor/StockDetail";
-import TopUpPage from '@/pages/Investor/TopUpPage';
+import OwnerDashboard from '@/pages/Owner/Dashboard';
+import Wallet from '@/pages/Owner/Wallet';
+import StockList from '@/pages/Owner/StockList';
+import OwnerPortfolio from '@/pages/Owner/Portfolio';
+import TransactionHistory from '@/pages/Owner/TransactionHistory';
+import Ranking from '@/pages/Owner/Ranking';
+import StockDetail from "@/pages/Owner/StockDetail";
+import TopUpPage from '@/pages/Owner/TopUpPage';
 
 // Các trang Dashboard chính
 import Dashboard from '@/pages/Dashboard/Dashboard';
 import NotFound from '@/pages/NotFound/NotFound';
-import OwnerDashboard from "@/pages/Owner/OwnerDashboard.jsx";
+import InvestorDashboard from "@/pages/Investor/OwnerDashboard.jsx";
+import RegisterStock from "@/pages/Investor/RegisterStock.jsx";
 import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminUsers from '@/pages/admin/AdminUsers';
@@ -28,6 +29,8 @@ import SetTime from '@/pages/SetTime/SetTime';
 // Các trang Auth
 import Login from '@/pages/Auth/Login';
 import Register from '@/pages/Auth/Register';
+import RegisterCompany from '@/pages/Auth/RegisterCompany';
+import OAuthCallback from '@/pages/Auth/OAuthCallback';
 import ForgotPassword from '@/pages/Auth/ForgotPassword';
 
 /**
@@ -42,6 +45,8 @@ const AppRoutes = () => {
             <Route element={<AuthLayout/>}>
                 <Route path="/auth/login" element={<Login/>}/>
                 <Route path="/auth/register" element={<Register/>}/>
+                <Route path="/auth/register/company" element={<RegisterCompany/>}/>
+                <Route path="/auth/oauth-callback" element={<OAuthCallback/>}/>
                 <Route path="/auth/forgot-password" element={<ForgotPassword/>}/>
             </Route>
 
@@ -50,24 +55,25 @@ const AppRoutes = () => {
                 <Route path="/" element={<Dashboard/>}/>
                 <Route path="/investor/topup/:token" element={<TopUpPage/>}/>
                 <Route path="/owner/topup/:token" element={<TopUpPage/>}/>
+                <Route path="/investor/register" element={<RegisterStock/>}/>
 
                 {/* Các tuyến đường ứng dụng được bảo vệ */}
                 <Route element={<PrivateRoute/>}>
                     <Route path="/app" element={<RoleHome/>}/>
 
-                    <Route element={<RoleRoute roles={['INVESTOR']} allowPendingOwner/>}>
-                        <Route path="/investor" element={<OwnerDashboard/>}/>
+                    <Route element={<RoleRoute roles={['INVESTOR']}/> }>
+                        <Route path="/investor" element={<InvestorDashboard/>}/>
                         <Route path="/investor/stocks/:id" element={<StockDetail/>}/>
                     </Route>
 
                     <Route element={<RoleRoute roles={['OWNER']}/>}>
-                        <Route path="/owner" element={<InvestorDashboard/>}/>
+                        <Route path="/owner" element={<OwnerDashboard/>}/>
                         <Route path="/owner/wallet" element={<Wallet/>}/>
                         <Route path="/owner/stocks" element={<StockList/>}/>
                         <Route path="/owner/buy" element={<Navigate to="/owner/stocks" replace/>}/>
                         <Route path="/owner/sell" element={<Navigate to="/owner/stocks" replace/>}/>
                         <Route path="/owner/stocks/:id" element={<StockDetail/>}/>
-                        <Route path="/owner/portfolio" element={<InvestorPortfolio/>}/>
+                        <Route path="/owner/portfolio" element={<OwnerPortfolio/>}/>
                         <Route path="/owner/transactions" element={<TransactionHistory/>}/>
                         <Route path="/owner/ranking" element={<Ranking/>}/>
                     </Route>

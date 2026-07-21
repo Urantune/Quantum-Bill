@@ -25,12 +25,16 @@ import quantum_bill.stock.auth.dto.request.*;
 import quantum_bill.stock.auth.dto.response.AuthenticationResponse;
 import quantum_bill.stock.auth.dto.response.IntrospectResponse;
 import quantum_bill.stock.auth.dto.response.UserResponse;
+import quantum_bill.stock.auth.dto.response.CompanyListingRegistrationResponse;
 import quantum_bill.stock.auth.exception.AppException;
 import quantum_bill.stock.auth.exception.ErrorCode;
-import quantum_bill.stock.investor.entity.RefreshToken;
-import quantum_bill.stock.investor.entity.Wallet;
-import quantum_bill.stock.investor.repository.WalletRepository;
-import quantum_bill.stock.owner.exception.ResourceNotFoundException;
+import quantum_bill.stock.owner.entity.RefreshToken;
+import quantum_bill.stock.owner.entity.Wallet;
+import quantum_bill.stock.owner.repository.WalletRepository;
+import quantum_bill.stock.investor.exception.ResourceNotFoundException;
+import quantum_bill.stock.investor.dto.request.StockRequestDTO;
+import quantum_bill.stock.investor.service.IStockService;
+import quantum_bill.stock.investor.repository.StockRepository;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
@@ -56,6 +60,8 @@ public class AuthService {
     PasswordEncoder passwordEncoder;
     InvalidatedTokenRepository invalidatedTokenRepository;
     EmailService emailService;
+    IStockService stockService;
+    StockRepository stockRepository;
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
@@ -100,6 +106,35 @@ public class AuthService {
         }
 
         return toResponse(saved);
+    }
+
+    @Transactional
+    public CompanyListingRegistrationResponse registerCompanyListing(CompanyListingRegistrationRequest request) {
+        String companyName = request.companyName().trim();
+        String symbol = request.symbol().trim().toUpperCase(Locale.ROOT);
+        if (stockRepository.existsByCompanyNameIgnoreCase(companyName)) {
+            throw new IllegalArgumentException("Tên công ty đã tồn tại trên hệ thống");
+        }
+        if (stockRepository.existsBySymbolIgnoreCase(symbol)) {
+            throw new IllegalArgumentException("Mã cổ phiếu đã tồn tại trên hệ thống");
+        }
+        UserResponse account = register(new RegisterRequest(
+                companyName,
+                request.email().trim(),
+                request.username().trim(),
+                request.password(),
+                "INVESTOR"
+        ));
+        var stock = stockService.submitForApproval(new StockRequestDTO(
+                symbol,
+                companyName,
+                request.industry(),
+                request.description(),
+                request.initialPrice(),
+                "PENDING",
+                account.id()
+        ));
+        return new CompanyListingRegistrationResponse(account, stock);
     }
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException, AppException {

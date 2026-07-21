@@ -1,307 +1,399 @@
-# Quantum-Bill Project Map
+# Quantum Bill - Project Map
 
-Tai lieu nay danh cho coding agents doc nhanh truoc khi sua code. Muc tieu la nam cau truc, quan he module va cac file nen mo truoc, tranh doc lan man ton token.
+Tai lieu ban giao cho agent tiep theo. Noi dung phan anh code va database tai thoi diem 2026-07-21.
 
-## Tong Quan
+## 1. Muc tieu he thong
 
-Repo gom 2 ung dung chinh:
+Quantum Bill la san giao dich chung khoan gia lap gom 3 role:
 
-- `Back/`: Spring Boot backend, Java 21, Maven wrapper, JPA/MySQL, MongoDB, Spring Security, validation.
-- `Front/frontend/`: Vite React frontend, React 19, Tailwind CSS, React Router, Axios, Recharts, Framer Motion.
+- `OWNER`: nguoi dau tu ca nhan, co vi, mua/ban co phieu, xem danh muc va lich su.
+- `INVESTOR`: cong ty niem yet/chủ phat hanh. Quan ly co phieu cua chinh cong ty va duyet/tu choi lenh mua ban co phieu do.
+- `ADMIN`: quan tri he thong, duyet tai khoan cong ty, duyet ma co phieu, khoa user, chay simulation va dat gio giao dich.
 
-Backend va frontend hien chua duoc noi chat voi nhau:
+Luu y: ten package `investor` trong backend dang chua nghiep vu giao dich cua `OWNER`. Day la ten cu, khong nen suy ra role tu ten package.
 
-- Backend co REST CRUD that cho `Stock` tai `/api/stocks`.
-- Frontend hien dung mock data qua `src/services/marketService.js`.
-- `src/services/api.js` da co Axios client de chuyen sang API that sau nay.
+## 2. Cau truc repository
 
-## Lenh Hay Dung
+```text
+Quantum-Bill/
+|- Back/                         Spring Boot backend
+|  |- pom.xml
+|  `- src/main/java/quantum_bill/stock/
+|     |- auth/                   login, register, JWT, refresh/logout
+|     |- admin/                  user/stock approval, wallet adjustment
+|     |- investor/               trading, wallet, portfolio, orders
+|     |- owner/                  stock listing, market simulation, Mongo history
+|     `- common/                 bootstrap, trading-time setting
+|- Front/frontend/               React + Vite frontend
+|  |- src/routes/AppRoutes.jsx   route/role map
+|  |- src/context/AuthContext.jsx
+|  |- src/constants/navigation.js
+|  |- src/services/              backend API adapters
+|  `- src/pages/                 screens by role
+`- PROJECT_MAP.md                file nay
+```
 
-Luon dung `rtk` khi chay shell command trong Codex.
+## 3. Cong nghe va lenh chay
+
+Backend:
+
+- Java source target: 21.
+- Spring Boot 4.1.0.
+- Spring MVC, JPA/Hibernate, Security, Validation.
+- MySQL Connector/J.
+- Spring Data MongoDB.
+- JWT Nimbus/JJWT dependencies.
+
+Frontend:
+
+- React 19, React Router, Vite 6.
+- Axios, Tailwind CSS, Recharts, Framer Motion, Lucide.
+
+May hien tai can ep `JAVA_HOME` sang JDK co `javac`:
 
 ```bash
-rtk npm run dev
-rtk npm run build
-rtk npm run lint
-rtk ./mvnw test
-rtk ./mvnw spring-boot:run
+cd Back
+JAVA_HOME=/usr/lib/jvm/java-26 ./mvnw spring-boot:run
 ```
 
-Thu muc chay lenh:
+Backend: `http://localhost:8080`
 
-- Frontend: `Front/frontend`
-- Backend: `Back`
+```bash
+cd Front/frontend
+npm install
+npm run dev
+```
 
-## Backend Map
+Frontend: `http://localhost:5173`
 
-Entry point:
+Vite proxy request `/api` sang backend 8080. Neu frontend bao `ECONNREFUSED /api/...`, backend chua chay hoac da dung vi DB cloud timeout.
 
-- `Back/src/main/java/quantum_bill/stock/StockApplication.java`
+Lenh kiem tra da dung:
 
-Config:
+```bash
+cd Back
+JAVA_HOME=/usr/lib/jvm/java-26 ./mvnw test
 
-- `Back/pom.xml`: Spring Boot `4.1.0`, Java `21`, JPA, MongoDB, Web MVC, Security, Validation, MySQL Connector/J, Lombok.
-- `Back/src/main/resources/application.properties`: MySQL + MongoDB connection config. File nay dang co credentials hardcoded; khong echo lai secret neu khong can.
-- `Back/src/main/java/quantum_bill/stock/owner/config/SecurityConfig.java`: tat CSRF, `anyRequest().permitAll()`. Cac `@PreAuthorize` trong controller dang comment.
+cd Front/frontend
+npm run build
+```
 
-Package domain:
+Ca Spring context test va frontend production build da pass vao 2026-07-21. Frontend co warning bundle lon hon 1000 kB, chua can xu ly trong scope hien tai.
+
+## 4. Database va quyen so huu du lieu
+
+### MySQL
+
+MySQL la source of truth cho du lieu nghiep vu cung:
+
+- `users`, `roles`, `user_roles`
+- `stocks`
+- `wallets`, `wallet_transactions`
+- `portfolio_holdings`
+- `stock_transactions`
+- audit/error/token tables
+
+Quan he chinh:
 
 ```text
-quantum_bill.stock
-├── admin
-│   ├── entity: User, Role, UserRole, AuditLog, SystemError
-│   └── repository: JpaRepository cho cac entity admin
-├── investor
-│   ├── entity: PortfolioHolding, StockTransaction, Wallet, WalletTransaction, RefreshToken
-│   └── repository: JpaRepository cho cac entity investor
-└── owner
-    ├── config: SecurityConfig
-    ├── controller: StockController
-    ├── dto/request: StockRequestDTO
-    ├── dto/response: StockResponseDTO
-    ├── document: StockPriceHistory
-    ├── entity: Stock, MarketNews
-    ├── exception: ApiError, GlobalExceptionHandler, ResourceNotFoundException
-    ├── mongo: StockPriceHistoryRepository
-    ├── repository: StockRepository, MarketNewsRepository
-    └── service: IStockService, impl/StockService
+User --< UserRole >-- Role
+User --1 Wallet
+User --< PortfolioHolding >-- Stock
+User --< StockTransaction >-- Stock
+User(INVESTOR) --< Stock.createdBy
+Wallet --< WalletTransaction
 ```
 
-### Backend Stock Flow
+`stocks.created_by` la tai khoan cong ty so huu ma co phieu. Tat ca API dashboard cong ty phai loc theo field nay.
 
-Request flow:
+Thong tin ket noi MySQL/Mongo/JWT nam tai:
+
+`Back/src/main/resources/application.properties`
+
+File nay dang co credential cloud that. Khong dua credential vao response, log, commit moi hoac tai lieu khac. Khi chuyen may, phai chuyen file config theo kenh rieng hoac chuyen sang environment variables.
+
+### MongoDB
+
+MongoDB database: `quantumbill`.
+
+Collections:
+
+- `stock_price_histories`: tung tick gia, gom stockId, symbol, old/new price, amount/percent, direction, reason, recordedAt.
+- trading-time collection qua `TradingTimeSetting`: mot document duy nhat co key co dinh, openTime va closeTime. Update document hien tai, khong tao document moi moi lan.
+
+Gia hien tai van duoc cap nhat trong MySQL `stocks.current_price`; lich su bien dong duoc ghi MongoDB. Neu Mongo tam thoi mat ket noi, simulation van cap nhat MySQL va bo qua loi save history de backend khong chet.
+
+## 5. Tai khoan hien tai
+
+Tai khoan mau:
+
+| Role | Username | Password | Ghi chu |
+|---|---|---|---|
+| ADMIN | `admin` | `123` | Quan tri |
+| OWNER | `hehe` | `123` | Nguoi dau tu mau |
+| OWNER | `tt` | `123456` | Tai khoan test cu, tuy DB hien tai |
+
+Database da dong bo 19 ma co phieu thuoc 18 cong ty va dung 18 account `INVESTOR`. Password bootstrap cho cac account cong ty la `123`:
+
+`fpt`, `btc`, `tcl`, `vic`, `vnm`, `vcb`, `aapl`, `tsla`, `nvda`, `gold`, `eth`, `dudinh`, `rich`, `qbt1015`, `egqub`, `eqube`, `egqub123`, `eqrquba`.
+
+Username cong ty la chu thuong ASCII, khong dau, khong khoang trang. Form register validate regex:
+
+```regex
+^[a-z0-9_]{2,30}$
+```
+
+`DataBootstrap` trong `common/DataBootstrap.java`:
+
+- Dam bao 3 role ton tai.
+- Dam bao `admin` va `hehe`.
+- Moi company duy nhat co mot account INVESTOR.
+- Username account bootstrap lay tu symbol dau tien cua company va lowercase.
+- Gan moi stock ve dung `createdBy`.
+- Reset password account company ve `123` moi lan backend khoi dong.
+
+## 6. Auth va quy trinh duyet cong ty
+
+### Register OWNER
+
+1. `POST /api/auth/register` voi role `OWNER`.
+2. `AuthService.register()` tao user `ACTIVE`.
+3. Gan role OWNER va tao wallet ban dau 100,000,000 VND.
+4. Frontend luu session va dieu huong theo role.
+
+### Register INVESTOR
+
+1. Dung cung trang `/auth/register`, chon `INVESTOR (Cong ty niem yet)`.
+2. Backend tao user `PENDING`, chua gan role.
+3. Frontend khong luu session, dua ve login va thong bao cho Admin duyet.
+4. User PENDING khong login duoc (`USER_NOT_ACTIVE`).
+5. Admin vao `/admin/users`, nut `Duyet cong ty` chi hien cho status PENDING.
+6. `POST /api/admin/owners/{userId}/approve` chuyen ACTIVE va gan role INVESTOR.
+7. Neu `fullName` trung `stocks.company_name`, `AdminService.approveOwner()` gan stock do cho account vua duyet.
+
+### Login/session frontend
+
+`AuthContext.jsx` goi `/api/auth/login`, decode JWT payload, luu:
+
+- `quantum_bill_user`
+- `quantum_bill_token`
+
+trong `localStorage`, sau do gan `Authorization: Bearer ...` vao Axios.
+
+Canh bao security hien tai: `SecurityConfig` dang `.anyRequest().permitAll()`. Frontend co route guard va backend co check ownership bang `companyUserId`, nhung client co the gia mao ID neu goi API truc tiep. User truoc day yeu cau tam bo auth token. Neu dua len production, viec dau tien la bat JWT resource-server va lay user ID tu authenticated principal thay vi query/body/path.
+
+## 7. Frontend route theo role
+
+Public:
+
+- `/`: trang chu/market overview.
+- `/auth/login`, `/auth/register`, `/auth/forgot-password`.
+- `/owner/topup/:token` va `/investor/topup/:token`: trang hoan tat nap tien ao.
+
+OWNER (nguoi dau tu):
+
+- `/owner`: dashboard thi truong.
+- `/owner/wallet`: vi va tao QR nap tien.
+- `/owner/stocks`: bang gia + mua/ban chung tren mot man hinh.
+- `/owner/stocks/:id`: chi tiet/chart mot co phieu.
+- `/owner/portfolio`: danh muc.
+- `/owner/transactions`: lich su giao dich.
+- `/owner/ranking`: xep hang.
+- `/owner/buy`, `/owner/sell`: redirect ve `/owner/stocks`, khong con menu rieng.
+
+INVESTOR (cong ty):
+
+- `/investor`: `OwnerDashboard`, chi load stocks va pending orders cua account hien tai.
+- `/investor/stocks/:id`: chi tiet stock cong ty.
+
+ADMIN:
+
+- `/admin`: tong quan.
+- `/admin/users`: duyet/khoa user.
+- `/admin/stocks`: duyet/reject listing.
+- `/admin/simulation`: force market tick.
+- `/admin/settime`: doc/cap nhat gio giao dich.
+
+`Sidebar.jsx` loc `NAV_ITEMS` bang `getEffectiveRole(user)` va status. Khi them menu phai khai bao `roles`, tranh lam lo menu admin sang OWNER/INVESTOR.
+
+## 8. Backend API map
+
+### Auth: `/api/auth`
+
+| Method | Path | Ham |
+|---|---|---|
+| POST | `/register` | `AuthService.register` |
+| POST | `/login` | `AuthService.authenticated` |
+| POST | `/introspect` | `AuthService.introspect` |
+| POST | `/logout` | `AuthService.logout` |
+| POST | `/refresh` | `AuthService.refreshToken` |
+| POST | `/forgot-password` | `AuthService.forgotPassword` |
+
+### Stock/listing: `/api/stocks`
+
+| Method | Path | Ham/chuc nang |
+|---|---|---|
+| GET | `/api/stocks` | page tat ca stock |
+| GET | `/api/stocks/active?q=` | active stocks, co search |
+| GET | `/api/stocks/company/{userId}` | stocks co `createdBy.id=userId` |
+| GET | `/api/stocks/{id}` | chi tiet |
+| POST | `/api/stocks` | save stock, can `createdById` |
+| POST | `/api/stocks/submit` | tao listing `PENDING`, can `createdById` |
+| PUT | `/api/stocks/{id}` | cap nhat |
+| DELETE | `/api/stocks/{id}` | xoa |
+
+Frontend cong ty dung `ownerService.js`; `getCurrentUserId()` lay ID tu localStorage va tu dong gui `createdById`/`companyUserId`.
+
+### Market/Mongo: `/api/market`
+
+| Method | Path | Chuc nang |
+|---|---|---|
+| POST | `/simulate?force=false` | random mot tick cho tat ca ACTIVE stocks |
+| GET | `/stocks/{stockId}/history` | lich su Mongo cua stock |
+
+`MarketPriceScheduler.updateMarketPrices()` chay moi 15 giay (`fixedRate=15000`). Scheduler chi random trong gio giao dich. Admin simulation gui `force=true` de bo qua gio.
+
+Random price trong `MarketSimulationService`:
+
+- Gioi han ngay: +/-9% so voi gia tham chieu dau ngay.
+- Moi tick tong hop Gaussian market mood, 8% event shock va liquidity noise.
+- Moi tick clamp khoang +/-2.5%, sau do clamp tiep daily band +/-9%.
+- Luu `Stock.currentPrice` MySQL va `StockPriceHistory` Mongo.
+
+### Trading: `/api/trading`
+
+| Method | Path | Chuc nang |
+|---|---|---|
+| POST | `/buy` | tao BUY PENDING |
+| POST | `/sell` | tao SELL PENDING |
+| GET | `/wallet/{userId}` | vi |
+| GET | `/portfolio/{userId}` | danh muc/tong tai san/P&L |
+| GET | `/transactions/{userId}` | lich su mot OWNER |
+| GET | `/transactions` | tat ca giao dich, admin/report |
+| GET | `/orders/pending?companyUserId=` | chi pending cua stocks thuoc company |
+| POST | `/orders/{id}/approve?companyUserId=` | company duyet lenh cua minh |
+| POST | `/orders/{id}/reject?companyUserId=` | company reject lenh cua minh |
+| GET | `/ranking` | xep hang theo tong tai san |
+| POST | `/topup-sessions` | tao URL/QR token random, het han 15 phut |
+| POST | `/topup-sessions/{token}/complete` | nap mot lan va huy token |
+
+Trade flow:
+
+1. OWNER gui buy/sell trong gio mo cua.
+2. `TradingService.buy/sell` validate user, stock, wallet/holding va tao `StockTransaction(PENDING)`; chua tru/cong tien.
+3. INVESTOR cua stock load pending bang ownership `Stock.createdBy.id`.
+4. Khi approve BUY: check so du lan nua, tru `gross + 3.6%`, cap nhat holding/average price, ghi wallet transaction.
+5. Khi approve SELL: check quantity lan nua, cong `gross - 3.6%`, tru holding, ghi wallet transaction.
+6. Reject chi doi order sang `REJECTED`.
+
+Phi san:
 
 ```text
-HTTP /api/stocks
-  -> owner/controller/StockController
-  -> owner/service/IStockService
-  -> owner/service/impl/StockService
-  -> owner/repository/StockRepository
-  -> owner/entity/Stock
-  -> MySQL table stocks
+FEE_RATE = 0.036 (3.6%)
+BUY net  = gross + fee
+SELL net = gross - fee
 ```
 
-Important files:
+### Trading time: `/api/settime`
 
-- `owner/controller/StockController.java`
-  - `GET /api/stocks?page=0&size=20`
-  - `GET /api/stocks/{id}`
-  - `POST /api/stocks`
-  - `PUT /api/stocks/{id}`
-  - `DELETE /api/stocks/{id}`
-- `owner/service/impl/StockService.java`
-  - Converts entity to `StockResponseDTO`.
-  - Sets `symbol` uppercase/trim.
-  - Defaults `status` to `ACTIVE`.
-  - Throws `ResourceNotFoundException` when stock missing.
-- `owner/repository/StockRepository.java`
-  - Extends `JpaRepository<Stock, Long>`.
-  - Adds `findBySymbol(String symbol)`.
+| Method | Path | Chuc nang |
+|---|---|---|
+| GET | `/api/settime` | load open/close hien tai tu Mongo |
+| POST | `/api/settime` | update open/close cung document |
 
-### Backend Persistence Split
+Mac dinh every day; chi set gio, khong set ngay. Frontend route hien tai la `/admin/settime` va can ADMIN, du yeu cau cu tung noi `/settime` public.
 
-MySQL stores relational/accounting data:
+### Admin: `/api/admin`
 
-- User, role, auth/session-ish tables: `User`, `Role`, `UserRole`, `RefreshToken`.
-- Account, wallet, holdings, transaction totals: `Wallet`, `WalletTransaction`, `PortfolioHolding`, `StockTransaction`.
-- Stock master/current summary: `Stock.currentPrice` remains in MySQL so account/portfolio calculations can join it.
+| Method | Path | Chuc nang |
+|---|---|---|
+| GET | `/health` | health message |
+| GET | `/users` | users + roles/status |
+| POST | `/owners/{id}/approve` | approve PENDING company -> ACTIVE INVESTOR |
+| POST | `/users/{id}/status?status=` | ACTIVE/LOCKED... |
+| POST | `/stocks/{id}/approve` | listing ACTIVE |
+| POST | `/stocks/{id}/reject` | listing REJECTED |
+| POST | `/wallets/adjust` | admin dieu chinh vi |
 
-MongoDB stores time-series-ish market movement data:
+## 9. Entity/document quan trong
 
-- `owner/document/StockPriceHistory.java`
-- Collection: `stock_price_histories`
-- Stores `stockId`, `symbol`, `oldPrice`, `newPrice`, `changeAmount`, `changePercent`, `direction`, `changeReason`, `changedByUserId`, `recordedAt`.
-- It does not store JPA relations to `Stock` or `User`; it stores IDs/symbol snapshot only.
-- `StockService.update()` writes a Mongo history document only when `currentPrice` changes.
+MySQL:
 
-### Backend Entity Relationships
+- `User`: id, fullName, email, username, passwordHash, status, timestamps, roles.
+- `Role`, `UserRole`: many-to-many role mapping.
+- `Stock`: symbol, companyName, industry, currentPrice, status, description, createdBy.
+- `Wallet`: user, balance, currency, timestamps.
+- `WalletTransaction`: wallet, type, amount, before/after balance, reference.
+- `PortfolioHolding`: user, stock, quantity, averageBuyPrice.
+- `StockTransaction`: user, stock, BUY/SELL, quantity, price, totalAmount, PENDING/APPROVED/REJECTED.
 
-Core relationships visible from JPA annotations:
+Mongo:
 
-```text
-User
-├── UserRole.user -> User
-├── AuditLog.user -> User
-├── Stock.createdBy -> User
-├── MarketNews.createdBy -> User
-├── PortfolioHolding.user -> User
-├── StockTransaction.user -> User
-├── Wallet.user -> User (one-to-one)
-└── RefreshToken.user -> User
+- `StockPriceHistory`: chart/history tick.
+- `TradingTimeSetting`: singleton trading schedule.
 
-Role
-└── UserRole.role -> Role
+Top-up session khong luu DB: dang nam trong `ConcurrentHashMap` cua `TradingService`. Restart backend se lam tat ca QR/link chua dung mat hieu luc.
 
-Stock
-├── MarketNews.stock -> Stock
-├── PortfolioHolding.stock -> Stock
-└── StockTransaction.stock -> Stock
+## 10. Trang/component quan trong
 
-Wallet
-└── WalletTransaction.wallet -> Wallet
-```
+- `pages/Investor/Dashboard.jsx`: dashboard OWNER.
+- `pages/Investor/StockList.jsx`: market + buy/sell cung trang.
+- `pages/Investor/StockDetail.jsx`: chart stock.
+- `components/Investor/StockChart.jsx`: TradingView-like custom Recharts chart, wheel zoom handling.
+- `pages/Owner/OwnerDashboard.jsx`: dashboard cong ty INVESTOR, listing va pending approval.
+- `pages/admin/AdminUsers.jsx`: duyet company PENDING va lock user.
+- `pages/admin/AdminStocks.jsx`: duyet listing.
+- `pages/SetTime/SetTime.jsx`: trading hours.
+- `services/investorService.js`: API cua OWNER trader.
+- `services/ownerService.js`: API cua company INVESTOR.
+- `services/adminApi.js`: API Admin.
 
-Stock entity fields:
+## 11. Trang thai da lam va da test
 
-- `id`, `symbol`, `companyName`, `industry`, `description`, `currentPrice`, `status`, `createdBy`, `createdAt`, `updatedAt`.
-- Table: `stocks`.
-- `symbol` unique, max length 20.
+Da lam:
 
-Stock DTO contract:
+- Register/login/logout frontend va JWT response parsing.
+- INVESTOR register PENDING, Admin approve moi login duoc.
+- Tach dashboard/menu OWNER, INVESTOR, ADMIN.
+- Company ownership bang `stocks.created_by`.
+- Company chi xem/duyet order cua stock minh.
+- OWNER mua/ban PENDING, wallet, portfolio, transactions, ranking.
+- Phi giao dich 3.6%.
+- Market simulation 15 giay, daily cap +/-9%.
+- Mongo history va fallback khi Mongo timeout.
+- Admin set trading time singleton Mongo document.
+- QR nap tien ao voi token random one-time.
+- 18 account cong ty duoc dong bo vao MySQL, username ASCII ngan, password 123.
 
-- Request: `symbol`, `companyName`, `industry`, `description`, `currentPrice`, `status`, `createdById`.
-- Response: `id`, `symbol`, `companyName`, `industry`, `description`, `currentPrice`, `status`, `createdAt`.
-- Note: `createdById` is present in request DTO but currently not used by `StockService`.
+Test thuc te gan nhat:
 
-## Frontend Map
+- `fpt / 123` login thanh cong.
+- `/api/stocks/company/12` chi tra stock FPT.
+- Pending endpoint cua company FPT tra 4 order va ca 4 deu symbol FPT.
+- Backend Spring context test pass voi MySQL + Mongo cloud.
+- Frontend `npm run build` pass.
 
-Entry/config:
+## 12. No ky thuat va viec agent tiep theo can biet
 
-- `Front/frontend/src/main.jsx`: React app mount.
-- `Front/frontend/src/App.jsx`: loads `AppRoutes`.
-- `Front/frontend/vite.config.js`: alias `@` -> `src`, dev server port `5173`.
-- `Front/frontend/tailwind.config.js`, `src/index.css`, `src/App.css`: styling.
+1. Backend authorization dang `permitAll`; ownership hien dua vao ID client gui len. Can JWT principal neu muon an toan that.
+2. Package/role naming bi nguoc: `OWNER` la trader, `INVESTOR` la company. Khong doi hang loat neu chua co migration plan.
+3. Top-up token chi in-memory, restart la mat.
+4. Mongo Atlas co luc timeout/refused do mang/port 27017; service history da co fallback nhung TradingTime van can Mongo.
+5. `spring.jpa.show-sql=true` tao log rat nhieu, co the tat khi debug xong.
+6. Application config dang chua secret that. Nen doi sang `${DB_URL}`, `${DB_USERNAME}`, `${DB_PASSWORD}`, `${MONGODB_URI}`, `${JWT_SECRET}` truoc khi public repo.
+7. Frontend forgot-password dang hien ngoai scope du backend co endpoint stub/email logic.
+8. Admin dashboard co shortcut path cu nhu wallet/ranking nhung AppRoutes khong khai bao day du; can xoa shortcut hoac them route neu tiep tuc scope admin.
+9. `GET /api/trading/transactions` va cac overload approve/reject global con trong service; khong de company UI goi nham.
+10. Cac thay doi hien tai chua duoc commit trong luot ban giao nay. Kiem tra `git status` va khong revert file nguoi dung da sua.
 
-Routing:
+## 13. Cach agent moi tiep tuc nhanh
 
-```text
-src/App.jsx
-  -> src/routes/AppRoutes.jsx
-    -> src/layouts/MainLayout.jsx
-      -> Sidebar + Navbar + Outlet + Footer
-```
+1. Doc file nay.
+2. Doc `AGENTS.md`, `/home/urantune/.codex/RTK.md`, `/home/urantune/.codex/SERENA.md`.
+3. Activate Serena project tai root Quantum-Bill.
+4. Chay `git status --short`, khong reset thay doi hien co.
+5. Start backend bang JDK 26 command o muc 3.
+6. Xac nhan `curl http://localhost:8080/api/admin/health`.
+7. Start frontend va test role bang `admin/123`, `hehe/123`, `fpt/123`.
+8. Sau moi thay doi, chay Maven test va Vite build.
 
-Routes:
-
-```text
-/           -> pages/Dashboard/Dashboard.jsx
-/markets    -> pages/Markets/Markets.jsx
-/watchlist  -> pages/WatchlistPage/WatchlistPage.jsx
-/portfolio  -> pages/Portfolio/Portfolio.jsx
-/news       -> pages/News/News.jsx
-/analytics  -> pages/Analytics/Analytics.jsx
-/pricing    -> pages/PricingPage/PricingPage.jsx
-/settings   -> pages/Settings/Settings.jsx
-*           -> pages/NotFound/NotFound.jsx
-```
-
-Layout:
-
-- `layouts/MainLayout.jsx`
-  - Owns sidebar state: open/collapsed.
-  - Renders `Sidebar`, `Navbar`, main `<Outlet />`, `Footer`.
-
-Data flow:
-
-```text
-Page
-  -> Component
-  -> hooks/useFetch.js
-  -> services/marketService.js
-  -> data/*.js mock datasets
-```
-
-API-ready path:
-
-```text
-Component/hook
-  -> services/marketService.js
-  -> services/api.js
-  -> Backend REST API
-```
-
-`marketService.js` currently simulates async API calls with `simulateDelay`. To integrate backend, replace methods with `apiClient.get/post/...` while keeping component call sites stable.
-
-## Frontend Component Ownership
-
-Dashboard composition:
-
-```text
-pages/Dashboard/Dashboard.jsx
-├── Hero
-├── MarketCard/MarketCardOverview
-├── StockChart/StockChart
-├── Watchlist/Watchlist
-├── MarketCard/TopMovers
-├── News/NewsList
-├── Statistics/Statistics
-├── SectorPerformance/SectorPerformance
-├── Portfolio/PortfolioSummary
-├── Pricing/Pricing
-├── Testimonials/Testimonials
-└── FAQ/FAQ
-```
-
-Market/portfolio/news reuse:
-
-- `pages/Markets/Markets.jsx`: market overview, chart, movers, sectors.
-- `pages/Portfolio/Portfolio.jsx`: portfolio summary + watchlist.
-- `pages/News/News.jsx`: fetches market news and filters/categories locally.
-- `pages/Analytics/Analytics.jsx`: chart + sector/statistics.
-- `pages/WatchlistPage/WatchlistPage.jsx`: wraps `components/Watchlist/Watchlist`.
-
-Shared utilities:
-
-- `hooks/useFetch.js`: standard loading/error/data/refetch wrapper for promise services.
-- `utils/formatters.js`: currency, percent, change, compact number helpers.
-- `utils/cn.js`: class name composition helper.
-- `constants/theme.js`: motion/colors/theme constants.
-- `constants/navigation.js`: nav/footer/social links.
-- `components/common/*`: `Skeleton`, `ErrorState`, `EmptyState`, `SectionHeader`.
-
-## Integration Notes
-
-When wiring frontend to backend stocks:
-
-1. Set `VITE_API_BASE_URL` to backend base URL, likely `http://localhost:8080`.
-2. Update `src/services/api.js` fallback from placeholder API if needed.
-3. Replace selected `marketService` functions with `apiClient` calls.
-4. Match backend pageable response shape for `GET /api/stocks`; Spring returns a `Page` object, not a plain array.
-5. Keep `useFetch` contract stable: service methods should return the exact data components expect.
-
-Potential frontend-backend mismatch:
-
-- Frontend mock stock shape may differ from `StockResponseDTO`.
-- Backend route is `/api/stocks`; frontend market service has broader concepts: indices, watchlist, movers, sectors, statistics, portfolio, chart, news.
-- Only stock CRUD exists in backend right now. Other frontend dashboards are mock-only unless new backend endpoints are added.
-
-## What To Open First
-
-For backend stock CRUD:
-
-1. `Back/src/main/java/quantum_bill/stock/owner/controller/StockController.java`
-2. `Back/src/main/java/quantum_bill/stock/owner/service/impl/StockService.java`
-3. `Back/src/main/java/quantum_bill/stock/owner/entity/Stock.java`
-4. `Back/src/main/java/quantum_bill/stock/owner/dto/request/StockRequestDTO.java`
-5. `Back/src/main/java/quantum_bill/stock/owner/dto/response/StockResponseDTO.java`
-6. `Back/src/main/java/quantum_bill/stock/owner/repository/StockRepository.java`
-
-For frontend routing/layout:
-
-1. `Front/frontend/src/routes/AppRoutes.jsx`
-2. `Front/frontend/src/layouts/MainLayout.jsx`
-3. `Front/frontend/src/constants/navigation.js`
-4. Target page under `Front/frontend/src/pages/...`
-
-For frontend data/component work:
-
-1. Target page under `Front/frontend/src/pages/...`
-2. Target component under `Front/frontend/src/components/...`
-3. `Front/frontend/src/hooks/useFetch.js`
-4. `Front/frontend/src/services/marketService.js`
-5. Related mock data under `Front/frontend/src/data/...`
-
-For API integration:
-
-1. `Front/frontend/src/services/api.js`
-2. `Front/frontend/src/services/marketService.js`
-3. Backend controller/service files for the endpoint.
-
-## Current Gotchas
-
-- `application.properties` contains hardcoded database credentials. Avoid copying them into logs/docs/chat unless explicitly required.
-- MySQL Aiven connectivity has previously timed out on some networks/ports. If DB connect fails before auth, test TCP with `nc -vz host port`.
-- Stock price movement history is MongoDB-only; do not reintroduce `StockPriceHistory` as a JPA entity unless the persistence split changes.
-- `MainLayout.jsx` filename casing matters on Linux; imports use `@/layouts/MainLayout`.
-- Frontend mock data may make screens look complete even when backend endpoints are not wired.
-- Security currently permits all requests; uncommenting `@PreAuthorize` requires real authentication/authorities first.
